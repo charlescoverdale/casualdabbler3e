@@ -1,0 +1,69 @@
+# Drivetime analysis
+
+A 'drive time' describes how far you can drive (i.e in a car on a public road) in a certain amount of time.
+
+-   Running a drive time analysis is useful to identify demographic catchments around a point (e.g. a school, hospital, road, or precinct.
+
+-   This can assist in defining the 'catchment' of users for a particular infrastructure asset.
+
+-   These polygons can then be overlayed with ABS census data (e.g. SA2) and spliced in with census variables (age, income, housing, SES status, etc).
+
+-   There's various companies that own drive time data. Most of these are map makers (e.g. google, ESRI, and Tom Tom).
+
+To get started, let's install and load packages.
+
+```{r, warning=FALSE, message=FALSE, error=FALSE, fig.keep = TRUE}
+
+#Loads the required required packages
+pacman::p_load(ggmap, 
+               tmaptools, 
+               RCurl, 
+               jsonlite, 
+               tidyverse, 
+               leaflet, 
+               writexl, 
+               readr, 
+               readxl, 
+               sf, 
+               mapview, 
+               rgdal, 
+               osrm)
+```
+
+## OSRM isochrones
+
+*Useful links for further reading: [Source 1](https://gis.stackexchange.com/questions/347807/using-osrm-to-create-isochrones-in-r-potentially-problematic-at-10-minutes-dri), [Source 2](https://rpubs.com/maiae/drivetime)*
+
+The OSRM package ([Github](https://github.com/riatelab/osrm)) pulls from OpenStreetMap to find travel times based on location.
+
+The downside is that the polygons it generates are pretty chunky... i.e. it doesn't take into account major roads and streets as the key tributaries/arteries of a city area. We can get around this a bit by dialing up the 'res' (i.e. the resolution) in the `osrmIsochrone` function... but it's only a partial solution.
+
+Uncomment the leaflet function below to view an interactive map.
+
+```{r, warning=FALSE, message=FALSE, error=FALSE, fig.keep = TRUE}
+
+# Create a dataframe with the latitude and longitude
+locations <- tibble::tribble(
+  ~place,     ~lon,     ~lat,
+  "Melbourne", 144.9631, -37.8136
+)
+
+# Run it through the osrm package to calculate isochrones
+iso <- osrmIsochrone(
+  loc = c(locations$lon, locations$lat), 
+  breaks = seq(from = 0, to = 30, by = 5),
+  res = 50
+)
+
+# Create an interactive map
+# leaflet() %>%
+#   setView(mean(locations$lon), mean(locations$lat), zoom = 7) %>%
+#   addProviderTiles("CartoDB.Positron", group = "Greyscale") %>%
+#   addMarkers(lng = locations$lon, lat = locations$lat) %>%
+#   addPolygons(
+#     fill = TRUE, stroke = TRUE, color = "black",
+#     weight = 0.5, fillOpacity = 0.2,
+#     data = iso,
+#     group = "Drive Time"
+#   )
+```

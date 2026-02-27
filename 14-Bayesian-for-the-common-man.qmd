@@ -1,0 +1,40 @@
+# Bayesian for the common man
+
+*Note: Chapter under development*
+
+## Enter Rev. Bayes
+
+Bayes' theorem is named after 18th-century British statistician and theologian, Thomas Bayes. His remarkable (yet simple) theorem describes how to update the probability of a hypothesis based on new evidence.
+
+In traditional frequentist statistics, probability is interpreted as the long-run frequency of events in repeated trials (sampling). A p-value from a sampling distribution tells us: *What is the chance of seeing this result, given some hypothesis?*
+
+Bayesian statistics, on the other hand, allows us to incorporate *prior* knowledge or beliefs into our analysis and update those beliefs as we gather more data. The central question of Bayes' Theorem therefore is: *How likely is the hypothesis to be true, given the data I've seen?*
+
+This isn't semantics - it's a completely different way of seeing the world.
+
+We can write Bayes' theorem using probability notation.
+
+### $$
+P(B| A) = \frac{P(A | B) P(B)}{P(A)}
+$$
+
+Where:
+
+-   $P(A | B)$ is the **posterior probability** (updated belief about $A$ after observing $B$)
+-   $P(B | A)$ is the **likelihood** (probability of observing $B$, given that $A$ is true)
+-   $P(A)$ is the **prior probability** (initial belief about $A$, before seeing $B$)
+-   $P(B)$ is the **evidence** (total probability of observing $B$, across all possible values of $A$)
+
+## Priors
+
+Tom Chivers, in his excellent book [Everything Is Predictable](https://www.amazon.com.au/Everything-Predictable-Remarkable-Theorem-Explains/dp/1399604058), steps through the history of Bayes' theorem.
+
+As we can see in the denominator $P(A)$, Bayes' theorem relies on our initial belief about A *before* seeing B. This is implicit in the frequentists approach too - it's just that they put equal possibility on each possible answer.
+
+This creates a novel issue, known as Boole's objection. Tom Chivers steps this through in his book:
+
+> Imagine... 'an urn filled with balls, either black or white. If you have a flat prior on the total number of black balls in the urn, then any given mix of black and white balls is equally likely. (If there are only four balls in the urn, you know have three possibilities - two black, one black and zero black - and they're all equally likely.).
+>
+> But if you assume that *each ball* is equally likely to be black or white - a flat prior on the probability of drawing a white or black each time - then your prior probability favours (very strongly if there are lots of balls) a roughly fifty-fifty mix in the urn as a whole.
+
+The importance of priors becomes obvious when thinking about disease diagnosis. Let's work through an example:

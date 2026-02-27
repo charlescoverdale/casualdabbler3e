@@ -1,0 +1,120 @@
+# Functions
+
+*Note: Chapter under development*
+
+Functions are set sof instructions that take inputs (arguments), processes them, and returns an output. Instead of writing the same code repeatedly, you can define a function once and use it whenever needed. This makes your scripts cleaner and easier to maintain.
+
+I recommend Hadley Wickham's great [chapter on functions](https://r4ds.hadley.nz/functions.html) in his book [R for Data Science 2e](https://r4ds.hadley.nz/).
+
+## Components
+
+A function in R is defined using the `function` keyword. Here is a simple function that adds two numbers:
+
+```{r,results='hide', warning=FALSE,message=FALSE}
+
+add_numbers <- function(a, b) {
+  result <- a + b
+  return(result)
+}
+
+# Using the function
+add_numbers(3, 5)
+
+```
+
+In this example, we see a function consisting of:
+
+1.  A name (e.g., `add_numbers`)
+2.  Arguments (e.g., `a`, `b`)
+3.  A body that performs calculations or operations
+4.  A return statement (optional, but recommended)
+
+We can also reference functions (from other packages) for use in our own custom functions. This data cleaning functions references `dplyr`, `stringr,` and `tidyr`.
+
+```{r,results='hide', warning=FALSE,message=FALSE}
+
+# Practical Example: Data Cleaning Function
+
+library(dplyr)
+library(stringr)
+library(tidyr)
+
+data_cleaner <- function(df) {
+  df <- df %>% 
+    dplyr::mutate(across(where(is.character), 
+    stringr::str_trim)) %>% # Trim whitespace
+    tidyr::drop_na() # Remove missing values
+  return(df)
+}
+
+# Example
+df <- data.frame(name = c("Alice    ", " Bob", NA), age = c(25, 30, 22))
+data_cleaner(df)
+
+```
+
+## Luhn example
+
+It turns out credit card numbers aren't a random 16 digits, there's an algorithm (named after it's inventor Hans Peter Luhn) that determines the combinations possible.
+
+It follows these steps:
+
+1.  Starting from the right, double every second digit.
+2.  If doubling a digit results in a number greater than 9, subtract 9 from it.
+3.  Sum all the digits.
+4.  If the total sum is a multiple of 10, the number is valid; otherwise, it is invalid.
+
+That's a lot of info... instead let's write a function to check if a credit card number is valid:
+
+```{r,results='hide', warning=FALSE,message=FALSE}
+
+validate_credit_card <- function(card_number) {
+  digits <- as.numeric(strsplit(as.character(card_number), "")[[1]])
+  n <- length(digits)
+  
+  # Double every second digit from the right
+  for (i in seq(n - 1, 1, by = -2)) {
+    digits[i] <- digits[i] * 2
+    if (digits[i] > 9) {
+      digits[i] <- digits[i] - 9
+    }
+  }
+  
+  # Check if the sum is a multiple of 10
+  return(sum(digits) %% 10 == 0)
+}
+
+# Example usage
+validate_credit_card(4532015112830366) # Should return TRUE
+validate_credit_card(1234567812345678) # Should return FALSE
+
+```
+
+## Loops in functions
+
+The real power of functions comes when we introduce loops. Loops allow us to repeat a calculation for different parameter values. Factorials are a great example where a loop is needed.
+
+A *factorial* is a mathematical operation denoted by an exclamation mark (!), used to find the product of all positive integers less than or equal to a given number.
+
+Let's write a looping function to calculate 10! (10x9x8x7x6x5x4x3x2x1)
+
+```{r,results='hide', warning=FALSE,message=FALSE}
+
+## Calculating Factorial Using a Loop
+
+factorial_loop <- function(n) {
+  if (n < 0) {
+    stop("Factorial is not defined for negative numbers.")
+  }
+  result <- 1
+  for (i in 1:n) {
+    result <- result * i
+  }
+  return(result)
+}
+
+# Example usage
+factorial_loop(10) # Test 10!
+```
+
+We see factorials blow out in size *very* quickly. Try inputting 100! and see what happens.

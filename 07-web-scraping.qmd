@@ -1,0 +1,157 @@
+# Web scraping
+
+## Why it matters
+
+Collecting data off websites can be a nightmare. The worst case is manually typing data from a web-page into spreadsheets... but there are *many* steps we can do before resorting to that.
+
+This chapter will outline the process for pulling data off the web, and particularly for understanding the exact web-page element we want to extract.
+
+The notes and code loosely follow the fabulous data tutorial by Grant R. McDermott in his [*Data Science for Economists*](https://raw.githack.com/uo-ec607/lectures/master/06-web-css/06-web-css.html) series. It has been updated to scrape the most recent version and structure of the relevant Wikipedia pages.
+
+First up, let's load some packages.
+
+```{r,results='hide', warning=FALSE,message=FALSE}
+
+# Install development version of rvest if necessary
+if (numeric_version(packageVersion("rvest")) < numeric_version('0.99.0')) {
+  remotes::install_github('tidyverse/rvest')
+}
+
+# Load and install the packages that we'll be using today
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(tidyverse, rvest, lubridate, janitor, data.table, hrbrthemes)
+
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+```
+
+## Anatomy of a webpage
+
+Web pages can be categorized as either *server-side rendered* (where content is embedded in the HTML) or *client-side rendered* (where content loads dynamically using JavaScript). When scraping server-side rendered pages, locating the correct CSS or XPath selectors is crucial.
+
+Trawling through CSS code on a webpage is a bit of a nightmare - so we'll use a chrome extension called [SelectGadget](https://chrome.google.com/webstore/detail/selectorgadget/mhjhnkcfbdhnjickkkdbjoemdmbfginb) to help.
+
+The R package that's going to do the heavy lifting is called [`rvest`](https://github.com/tidyverse/rvest) and is based on the python package called Beauty Soup.
+
+## Scraping a table
+
+Let's use this [wikipedia page](https://en.wikipedia.org/wiki/Men%27s_100_metres_world_record_progression#Unofficial_progression_before_the_IAAF) as a starting example. It contains various entries for the men's 100m running record.
+
+We can start by pulling all the data from the webpage.
+
+```{r, warning=FALSE,message=FALSE}
+
+m100 <- rvest:: read_html(
+               "http://en.wikipedia.org/wiki/Men%27s_100_metres_world_record_progression") 
+m100
+
+```
+
+...and we get a whole heap of mumbo jumbo.
+
+To get the table of 'Unofficial progression before the IAAF' we're going to have to be more specific.
+
+Using the SelectGadget tool we can click around and identify that that specific table.
+
+```{r, warning=FALSE,message=FALSE}
+
+pre_iaaf = 
+  m100 %>%
+  html_element("div+ .wikitable :nth-child(1)") %>% ## select table element
+  html_table()                                      ## convert to data frame
+
+pre_iaaf
+
+```
+
+Niiiiice - now that's better. Let's do some quick data cleaning.
+
+```{r,warning=FALSE,message=FALSE}
+
+pre_iaaf <- pre_iaaf %>%
+            clean_names() %>%
+            mutate(date = mdy(date))
+  
+pre_iaaf
+```
+
+Let's also scrape the data for the more recent running records. That's the tables named 'Records (1912-1976)' and 'Records since 1977'.
+
+For the second table:
+
+```{r,warning=FALSE,message=FALSE}
+
+iaaf_76 = m100 %>%
+  html_element("#mw-content-text > div > table:nth-child(17)") %>%
+  html_table()
+
+iaaf_76 <-iaaf_76 %>%
+  clean_names() %>%
+  mutate(date = mdy(date))
+
+iaaf_76
+```
+
+And now for the third table:
+
+```{r,warning=FALSE,message=FALSE}
+
+iaaf <- m100 %>%
+        html_element("#mw-content-text > div.mw-parser-output > table:nth-child(23)") %>%
+        html_table() %>%
+        clean_names() %>%
+        mutate(date = mdy(date))
+iaaf
+```
+
+How good. Now let's bind the rows together to make a master data set.
+
+```{r,warning=FALSE,message=FALSE}
+
+wr100 <- rbind(
+    pre_iaaf %>% dplyr::select(time, athlete, nationality, date) %>% 
+    mutate(era = "Pre-IAAF"),
+    iaaf_76 %>% dplyr::select(time, athlete, nationality, date) %>% 
+    mutate(era = "Pre-automatic"),
+    iaaf %>% dplyr::select(time, athlete, nationality, date) %>% 
+    mutate(era = "Modern")
+    )
+
+wr100
+
+```
+
+Excellent. Let's plot the results.
+
+```{r,warning=FALSE,message=FALSE}
+
+ggplot(wr100) +
+  geom_point(aes(x = date, y = time, col = era), alpha = 0.7) +
+  
+  labs(
+    title = "Men's 100m World Record Progression",
+    subtitle = "Analysing how times have improved over the past 130 years",
+    caption = "Data: Wikipedia 2025",
+    x = "",
+    y = ""
+  ) + 
+  
+  theme_minimal() +
+  
+  scale_y_continuous(limits = c(9.5, 11), breaks = c(9.5, 10, 10.5, 11)) +
+  
+  theme(
+    axis.text.y = element_text(vjust = -0.5, margin = ggplot2::margin(l = 20, r = -20)),
+    plot.subtitle = element_text(margin = ggplot2::margin(0, 0, 25, 0),size=11),
+    legend.title = element_blank(),
+    plot.title = element_text(face = "bold", size = 12),
+    plot.caption = element_text(size = 8),
+    axis.text = element_text(size = 8),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    axis.line.x = element_line(colour = "black", size = 0.4),
+    axis.ticks.x = element_line(colour = "black", size = 0.4)
+  )
+
+```

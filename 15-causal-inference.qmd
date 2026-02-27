@@ -1,0 +1,18 @@
+# Causal inference
+
+*Note: Chapter under development*
+
+## What causes what
+
+Causal inference the process of determining cause-and-effect relationships. Simply finding an association between two variables might be suggestive of a causal effect... but it also might not.
+
+The best book on this topic is [Causal Inference: The Mixtape](https://mixtape.scunning.com/) by the phenomenally talented Scott Cunningham.
+
+```{r}
+
+
+
+
+
+
+```

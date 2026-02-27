@@ -1,0 +1,50 @@
+# UK Economic Data
+
+*Note: Chapter under development*
+
+## ONS
+
+The [Office of National Statistics](https://www.ons.gov.uk/) (ONS) collates and publishes most of the UK's economic data sets.
+
+There's two main ways to access this data. Option 1, poorly formatted [spreadsheets](https://www.ons.gov.uk/economy/grossdomesticproductgdp/timeseries/abmi/pn2). Option 2, an [API](https://developer.ons.gov.uk/) (which has been in beta for over 5 years). We'll step through both.
+
+There's several R packages out there that either ping the ONS' API or web scrape the data. Kostas Vasilopoulos has produced one of the better ones (and it's on CRAN) called `onsr`.
+
+```{r}
+
+library(onsr)
+
+#Get a list of all datasets available
+ons_ids()
+
+ons_datasets()
+
+onsgdp <- onsr::ons_get(id = "gdp-to-four-decimal-places")
+
+head(onsgdp,100)
+
+```
+
+## Nomis
+
+Census data, as well as economic and social data sets that take into account location, are produced by the ONS' [Nomis](https://www.nomisweb.co.uk/) service. Nomis has it's [very own R package](https://github.com/ropensci/nomisr) called `nomisr`.
+
+The last UK census was in 2021. While there is a census slated for 2031, there is a [growing consensus](https://www.bbc.co.uk/news/uk-51468919) that this may not be necessary, with new administrative data sets providing a more accurate picture of the UK's population.
+
+```{r}
+
+```
+
+## Trade
+
+In April 2025, trade is well and truly the talk of the town.
+
+UK trade data is collated by HM Revenue & Customs (HMRC) and published on the website <https://www.uktradeinfo.com/>.
+
+[Peter van der Meulen](https://github.com/pvdmeulen) has developed a wonderful R package [`uktrade`](https://github.com/pvdmeulen/uktrade) to query HMRC's database and stitch together tables.
+
+Here's a worked example:
+
+```{r}
+
+```

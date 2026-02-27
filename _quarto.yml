@@ -1,0 +1,42 @@
+project:
+  type: book
+  output-dir: docs
+
+book:
+  title: "R Cookbook for the Casual Dabbler (3rd Edition)"
+  author: "Charles Coverdale"
+  date: today
+  chapters:
+    - index.qmd
+    - 02-making-maps-beautiful.qmd
+    - 03-charts.qmd
+    - 04-basic-modelling.qmd
+    - 05-hypothesis-testing.qmd
+    - 06-forecasting.qmd
+    - 07-web-scraping.qmd
+    - 08-text-mining.qmd
+    - 09-geocoding.qmd
+    - 10-drivetime-analysis.qmd
+    - 11-raster-data.qmd
+    - 12-ABS-economic-data.qmd
+    - 13-Austrlaian-election-data.qmd
+    - 14-Bayesian-for-the-common-man.qmd
+    - 15-causal-inference.qmd
+    - 16-functions.qmd
+    - 17-packages.qmd
+    - 18-UK-economic-data.qmd
+  sidebar:
+    tools:
+      - icon: linkedin
+        href: https://www.linkedin.com/in/charlescoverdale/
+      - icon: github
+        href: https://github.com/charlescoverdale/casualdabbler3e
+
+format:
+  html:
+    theme: cosmo
+    bibliography: book.bib
+    css: style.css
+    toc: true
+    toc-depth: 2
+    number-sections: false

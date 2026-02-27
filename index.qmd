@@ -1,0 +1,49 @@
+---
+description: A practical guide for using R in analysis and visualisation
+---
+
+# Introduction
+
+G'day and welcome to *R Cookbook for the Casual Dabbler (3rd edition).*
+
+RCCD 1st edition was originally published in 2020 as a side project during the COVID-19 pandemic in Melbourne.
+
+As I wrote in the midst of lock down:
+
+> I use R a lot for work and for side projects. Over the years I've collated a bunch of useful scripts, from macroeconomic analysis to quick hacks for making map legends format properly.
+>
+> Historically my code has been stored in random Rpubs documents, medium articles, and a bunch of .Rmd files on my hardrive. Occasionally I feel like doing things properly - and upload code to a repository on github.
+>
+> It doesn't take a genius to realize this isn't a very sustainable solution - and it also isn't very useful for sharing code with others. It turns out 2-years of lock down in Melbourne was enough incentive to sit down and collate my best and most useful code into a single place. In the spirit of open source, a book seemed like the most logical format.
+
+RCCD2e had surprisingly good (and long-lasting reviews). A lot has continued to change in the R community, and the world more broadly. As such, RCCD3e includes further revisions. Most notably, the book has been rebuilt in [Quarto](https://quarto.org/) — the successor to RMarkdown — for better formatting, cross-referencing, and long-term maintainability. Additionally:
+
+-   A new chapter on data wrangling with `dplyr` and `tidyr` has been added.
+
+-   Worked examples have been updated to reflect modern best practice.
+
+-   Many a bug and typo has been fixed.
+
+## Usage
+
+In each chapter I've written up the background, methodology and worked example for a separate piece of analysis.
+
+Most of this code will not be extraordinary to the seasoned R aficionado. However I find that in classic Pareto style \~20% of my code contributes to the **vast** majority of my work output. Having this 20% on hand will hopefully be useful to both myself and others.
+
+## Additional resources
+
+The R community is continually writing new packages and tools. Many of these are covered extensively in various free books available on the [bookdown.org](https://bookdown.org/) website.
+
+The rise of LLM's over the past 2-years has also made it significantly easier to find, refine, and expand on R code. RCCD2e includes optimized (and better formated) code which has gone through the scrutiny of many of the different LLM's.
+
+I encourage users to paste in code snippets to language models (or use [Cursor](https://www.cursor.com/)) for deeper explanations or alternate examples.
+
+## Limitations
+
+If you find a bug (along with spelling errors etc) please email me at charlesfcoverdale\@gmail.com with the subject line 'RCCD3e'.
+
+------------------------------------------------------------------------
+
+## About the author
+
+Charles Coverdale is an economist working across London and Melbourne. He is passionate about economics, climate science, and building talented teams. You can get in touch with Charles [on twitter](https://twitter.com/cfcoverdale) to hear more about his current projects.

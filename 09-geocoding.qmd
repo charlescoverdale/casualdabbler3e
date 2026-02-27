@@ -1,0 +1,204 @@
+# Geocoding
+
+## Lats and longs
+
+Geocoding converts addresses into coordinates (latitude and longitude) and vice versa. This helps turn basic address data into spatial points, making it useful for mapping and analyzing location-based patterns.
+
+For example, geocoding can help define catchment areas around an asset or visualize spatial data on a map. To do this, we need access to a large database of addresses and coordinates. Google Maps is a popular choice, offering an API with a freemium model for access.
+
+This [guide](https://towardsdatascience.com/breaking-down-geocoding-in-r-a-complete-guide-1d0f8acd0d4b) by Oleksandr Titorchuk also provides a great overview of the geocoding process in R.
+
+## Spatial data
+
+Let's get started by loading up some packages.
+
+```{r, warning=FALSE, message=FALSE, error=FALSE, fig.keep = TRUE}
+
+#Loads the required required packages
+pacman::p_load(ggmap, 
+               tmaptools, 
+               RCurl, 
+               jsonlite, 
+               tidyverse, 
+               leaflet, 
+               writexl, 
+               readr, 
+               readxl, 
+               sf, 
+               mapview, 
+               rgdal)
+
+```
+
+Next, we'll introduce some address data.
+
+Approved speed camera [locations](https://www.camerassavelives.vic.gov.au/camera-locations/approved-mobile-camera-locations) in Victoria, Australia are publicly available through the government website. We can download the dataset as a spreadsheet and import it into R as a csv.
+
+```{r, warning=FALSE, message=FALSE, error=FALSE, fig.keep = TRUE}
+
+#Read in spreadsheet
+url <- 'https://raw.githubusercontent.com/charlescoverdale/bookdata/main/mobile-camera-locations-june-2022.csv'
+
+#Note: We need to import as a csv rather than xlsx for url functionality
+camera_address <- read.csv(url, header=TRUE)
+
+#Fix the column labels
+camera_address <- janitor::row_to_names(camera_address,1)
+
+#Convert the suburb column to title case
+camera_address$SUBURB <- str_to_title(camera_address$SUBURB)
+
+#Concatenate the two fields into a single address field
+camera_address$ADDRESS <- paste(camera_address$LOCATION,
+                                camera_address$SUBURB,
+                                sep=", ")
+
+#Add in Australia to the address field just to idiot proof the df
+camera_address$ADDRESS <- paste(camera_address$ADDRESS, ", Australia", sep="")
+
+#Preview the data
+head(camera_address)
+```
+
+This dataset does not have street numbers - only street names. This makes intuitive sense (as most speed cameras aren't placed outside residential houses, but rather along main roads).
+
+We can see that the street and suburb names are in different columns. To run a geocode, we want a single field of address data. This makes it easier for the database we're fuzzy matching against to select the best possible point. Let's append the street name and the suburb name into a single field.
+
+We know all these addresses are in Australia, so we can add the word 'Australia' to the end of each entry in the newly created address field to help the geocoder find the location.
+
+It makes sense that all these addressed should have a postcode in the format 3XXX (as the data set is for the State of Victoria). However, let's hold off on that assumption for now.
+
+## Google API
+
+Now that we have a useful and highly descriptive address field, we're ready to run the geocode.
+
+We can geocode the lats and lons using Google's API through ther `ggmap` package.
+
+-   We must register a API key (by creating an account in the [google developer suite](https://developers.google.com/maps/documentation/geocoding/overview)).
+
+-   You can ping the API 2,500 times a day. Lucky for us this dataset is only 1,800 rows long!
+
+Uncomment the chunk below (using Ctrl+Shift+C) and enter your unique key from google to run the code.
+
+```{r, warning=FALSE, message=FALSE, error=FALSE, fig.keep = TRUE, eval=FALSE}
+
+# #Input the google API key
+# register_google(key = "PASTE YOUR UNIQUE KEY HERE")
+# 
+# #Run the geocode function from ggmap package
+# camera_ggmap <- ggmap::geocode(location = camera_address$ADDRESS,
+#                          output = "more",
+#                          source = "google")
+# 
+# #We'll bind the newly created address columns to the original df
+# camera_ggmap <- cbind(camera_address, camera_ggmap)
+# 
+# #Print the results
+# head(camera_ggmap)
+# 
+# #Write the data to a df
+# readr::write_csv(camera_ggmap,"C:/Data/camera_geocoded.csv")
+```
+
+We'll load up the output this chunk generates and continue.
+
+```{r, warning=FALSE, message=FALSE, error=FALSE, fig.keep = TRUE}
+
+url <- 'https://raw.githubusercontent.com/charlescoverdale/bookdata/main/camera_geocoded.csv'
+
+#Note: We need to import as a csv rather than xlsx for url functionality
+camera_ggmap <- read.csv(url, header=TRUE)
+
+```
+
+## Geocode analysis
+
+The raw dataset our geocode produced looks good! Although... it could probably use some cleaning.
+
+Let's rename this dataset so we don't loose the original df (and therefore have to run the google query again). This is simply a best practice step to build in some redundancy.
+
+```{r, warning=FALSE, message=FALSE, error=FALSE, fig.keep = TRUE}
+
+camera_geocoded <- camera_ggmap
+
+```
+
+```{r, warning=FALSE, message=FALSE, error=FALSE, fig.keep = TRUE}
+
+#Rename df
+camera_geocoded_clean <- camera_geocoded
+
+#Rename the API generated address field
+camera_geocoded_clean <- camera_geocoded_clean %>% rename(address_long=address)
+
+#Select only the columns we need
+camera_geocoded_clean <- camera_geocoded_clean %>% 
+                          dplyr::select("LOCATION",
+                                 "SUBURB",
+                                 "ADDRESS",
+                                 "lon", 
+                                 "lat", 
+                                 "address_long"
+                                 )
+
+#Make all the column names the same format
+camera_geocoded_clean <- janitor::clean_names(camera_geocoded_clean)
+
+#We still need to convert address_long to title case
+camera_geocoded_clean$address_long <- str_to_title(camera_geocoded_clean$address_long)
+```
+
+If we want to go one step further, we can create spatial points from this list of coordinates. This is a good step for eyeballing the data. We see most of it is in Victoria (as expected!)... but it has picked up a couple of points in Sydney and WA.
+
+These are worth investigating separately for correction or exclusion.
+
+Uncomment the mapview function below to see these points on a leaflet map.
+
+```{r, warning=FALSE, message=FALSE, error=FALSE, fig.keep = TRUE}
+        
+#Convert data frame to sf object
+camera_points <- sf::st_as_sf(x = camera_geocoded_clean, 
+                               coords = c("lon", "lat"),
+                               crs = "+proj=longlat 
+                                      +datum=WGS84 
+                                      +ellps=WGS84 
+                                      +towgs84=0,0,0")
+
+#Plot an interactive map
+# mapview(camera_points)
+```
+
+We can export these points as a shapefile using the `rgdal` package.Let's now have a look at our edge case datapoints.
+
+There's a couple of ways to do this... but one of the simplest is to extract the postcode as a separate field. We can then simply sort by postcodes that do not start with the number 3.
+
+```{r, warning=FALSE, message=FALSE, error=FALSE, fig.keep = TRUE}
+
+camera_points$postcode <- str_sub(camera_points$address_long, 
+                                   start= -16,  
+                                   end= -12)
+
+camera_points$postcode <- as.numeric(camera_points$postcode)
+
+outliers <- camera_points %>% filter (postcode <3000 | postcode >= 4000)
+
+print(outliers)
+```
+
+Easy enough. We see there's 7 rows that don't have a postcode starting in a 3000 postcode.
+
+Four of these are in NSW, two in QLD, and one in WA. It looks like they are real (e.g. the streets and suburbs do exist in that state)... so for now let's just exclude them from our dataset. We'll do this by filtering by postcode.
+
+Uncomment the mapview function below to see these points on a leaflet map.
+
+```{r, warning=FALSE, message=FALSE, error=FALSE, fig.keep = TRUE}
+
+camera_points_vic <- camera_points %>% filter (postcode>"3000" & postcode<"4000")
+
+head(camera_points_vic)
+
+#Plot an interactive map
+# mapview(camera_points_vic)
+```
+
+There we go! A clean, geocoded dataset of speed camera locations in Victoria.

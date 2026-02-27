@@ -1,0 +1,9 @@
+# Packages
+
+*Note: Chapter under development*
+
+## Pack it up
+
+The 'fundamental unit of shareable code' is a package. At its core, a package is about automation, convenience, and integrity. Rather than copy-pasting, or repeating analytical steps, a package guarantees the same functions are available time and time again.
+
+The best book on this topic is [R Packages (2e)](https://r-pkgs.org/) by Hadley Wickham and Jenifer Bryan.

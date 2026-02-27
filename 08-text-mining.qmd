@@ -1,0 +1,80 @@
+# Text mining
+
+Numbers are great... but words literally tell a story. Analysing text (e.g. books, tweets, survey responses) in a quantitative format is naturally challenging - however there's a few tricks which can simplify the process.
+
+This chapter outlines the process for inputting text data, and running some simple analysis. The notes and code loosely follow the fabulous book [*Text Mining with R*](https://www.bookdepository.com/Text-Mining-with-R-Julia-Silge/9781491981658) by Julia Silge and David Robinson.
+
+First up, let's load some packages.
+
+```{r, warning=FALSE,message=FALSE}
+
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(tidytext)
+library(textdata)
+```
+
+## Frequency analysis
+
+There's a online depository called [Project Gutenberg](https://www.gutenberg.org/) which catalogue texts that have lost their copyright.
+
+It just so happens that [The Bible](https://www.gutenberg.org/ebooks/30) is on this list. Let's check out the most frequent words.
+
+```{r}
+library(tidyverse)
+library(tidytext)
+
+# Correct URL for the raw text file
+bible_url <- "https://raw.githubusercontent.com/charlescoverdale/casualdabbler2e/main/data/bible.txt"
+
+# Read the text file directly from the URL
+bible <- read_lines(bible_url)
+
+# Convert to a tibble
+bible_df <- tibble(text = bible)
+
+# Tokenize words and remove stop words
+bible_tidy <- bible_df %>%
+  unnest_tokens(word, text) %>%
+  anti_join(stop_words, by = "word")
+
+# Find and display the most common words
+common_words <- bible_tidy %>%
+  count(word, sort = TRUE) %>%
+  head(20)  # Show the top 20 words
+
+print(common_words)
+
+```
+
+Somewhat unsurprisingly - "lord" wins it by a country mile.
+
+## Sentiment analysis
+
+Just like a frequency analysis, we can do a 'vibe' analysis (i.e. sentiment of a text) using a clever thesaurus matching technique.
+
+In the `tidytext` package are lexicons which include the general sentiment of words (e.g. the emotion you can use to describe that word).
+
+Let's see the count of words most associated with 'joy' in the bible.
+
+```{r, warning=FALSE,message=FALSE}
+
+# Tokenize words
+bible_tidy <- bible_df %>%
+  unnest_tokens(word, text) %>%
+  mutate(word = tolower(word))  # Ensure lowercase matching
+
+# Get NRC lexicon & filter for "joy"
+nrcjoy <- tidytext::get_sentiments("nrc") %>%
+  filter(sentiment == "joy")
+
+# Join words with NRC joy sentiment list & count occurrences
+bible_joy_words <- bible_tidy %>%
+  inner_join(nrcjoy, by = "word") %>%
+  count(word, sort = TRUE)
+
+# View top joyful words
+print(bible_joy_words)
+
+```
