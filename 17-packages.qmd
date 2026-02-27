@@ -1,9 +1,265 @@
 # Packages
 
-*Note: Chapter under development*
+## Why packages exist
 
-## Pack it up
+The "fundamental unit of shareable code" in R is a package. At its core, a package solves a simple problem: instead of copy-pasting functions between projects, you write the code once, bundle it properly, and load it anywhere with `library()`.
 
-The 'fundamental unit of shareable code' is a package. At its core, a package is about automation, convenience, and integrity. Rather than copy-pasting, or repeating analytical steps, a package guarantees the same functions are available time and time again.
+A package also enforces discipline. It requires documentation, consistent function signatures, and passing a battery of automated checks. Code that lives in a package is almost always better code than the same logic sitting in a loose `.R` script.
 
-The best book on this topic is [R Packages (2e)](https://r-pkgs.org/) by Hadley Wickham and Jenifer Bryan.
+The best reference on this topic is [R Packages (2e)](https://r-pkgs.org/) by Hadley Wickham and Jennifer Bryan. This chapter walks through the key ideas using `inflateR` — a real package built for this book — as a worked example.
+
+## The anatomy of a package
+
+An R package is a directory with a specific structure. The minimum required files are:
+
+```
+inflateR/
+├── DESCRIPTION        # Package metadata
+├── NAMESPACE          # What the package exports
+├── R/                 # All R function files
+│   ├── adjust.R
+│   └── historical_value.R
+└── data/              # Bundled datasets (.rda files)
+    ├── uk_cpi.rda
+    ├── aud_cpi.rda
+    └── ...
+```
+
+Everything else — tests, vignettes, data-raw scripts — is optional but recommended.
+
+## DESCRIPTION
+
+The `DESCRIPTION` file is the identity card of your package. It tells R (and CRAN) who wrote it, what it does, and what it depends on.
+
+```
+Package: inflateR
+Title: Inflation Adjustment for Historical Currency Values
+Version: 0.1.1
+Authors@R: person("Charles", "Coverdale",
+                  email = "charlesfcoverdale@gmail.com",
+                  role = c("aut", "cre"))
+Description: Convert historical monetary values into their present-day
+    equivalents using bundled CPI data sourced from the World Bank
+    Development Indicators. Supports GBP, AUD, USD, EUR, CAD, JPY,
+    CNY, and CHF.
+License: MIT + file LICENSE
+URL: https://github.com/charlescoverdale/inflateR
+Depends: R (>= 3.5.0)
+Encoding: UTF-8
+Language: en-US
+LazyData: true
+```
+
+A few things worth noting:
+
+- **Version** follows `major.minor.patch` convention. CRAN submissions increment the version each time.
+- **License** — MIT is the most permissive and widely used for open source R packages.
+- **LazyData: true** — tells R to load bundled datasets on demand rather than at startup, keeping the package lightweight.
+- **Depends: R (>= 3.5.0)** — sets the minimum R version required. Don't set this unnecessarily high.
+
+## Writing a function
+
+All functions live in `.R` files inside the `R/` directory. Each file can hold one or many functions — the convention is to group related functions together.
+
+Here is the core function from `inflateR`, slightly simplified:
+
+```r
+adjust_inflation <- function(amount, from_year, currency, to_year = NULL) {
+
+  # Look up currency code from country name if needed
+  country_lookup <- c(
+    "united kingdom" = "GBP", "australia" = "AUD",
+    "united states"  = "USD", "canada"    = "CAD",
+    "japan"          = "JPY", "china"     = "CNY",
+    "switzerland"    = "CHF", "germany"   = "EUR"
+  )
+
+  lookup <- country_lookup[tolower(trimws(currency))]
+  if (!is.na(lookup)) currency <- lookup
+  currency <- toupper(currency)
+
+  # Select the right CPI dataset
+  cpi_data <- switch(currency,
+    GBP = uk_cpi, AUD = aud_cpi, USD = usd_cpi,
+    EUR = eur_cpi, CAD = cad_cpi, JPY = jpy_cpi,
+    CNY = cny_cpi, CHF = chf_cpi
+  )
+
+  # Default to_year to the latest available year
+  if (is.null(to_year)) {
+    to_year <- min(as.integer(format(Sys.Date(), "%Y")), max(cpi_data$year))
+  }
+
+  # Calculate inflation adjustment
+  index_from <- cpi_data$index[cpi_data$year == from_year]
+  index_to   <- cpi_data$index[cpi_data$year == to_year]
+
+  round(amount * (index_to / index_from), 2)
+}
+```
+
+The formula is simple: multiply the original amount by the ratio of the two CPI index values. Everything else in the function is input validation and user convenience.
+
+## Documenting with roxygen2
+
+Documentation in R packages is written as structured comments directly above each function, using the `roxygen2` package. These comments get compiled into the `.Rd` help files that appear when you run `?adjust_inflation`.
+
+```r
+#' Adjust a historical monetary value for inflation
+#'
+#' Converts an amount from a historical year into its equivalent value in a
+#' target year, using bundled CPI data from the World Bank.
+#'
+#' @param amount Numeric. The original monetary amount.
+#' @param from_year Integer. The year the amount is from.
+#' @param currency Character. A currency code (e.g. "GBP") or country
+#'   name (e.g. "Australia") — case-insensitive.
+#' @param to_year Integer. The target year. Defaults to the current year.
+#'
+#' @return A numeric value: the inflation-adjusted amount.
+#'
+#' @examples
+#' adjust_inflation(12, 1963, "GBP")
+#' adjust_inflation(50, 1980, "AUD", to_year = 2000)
+#'
+#' @export
+adjust_inflation <- function(amount, from_year, currency, to_year = NULL) {
+  # ...
+}
+```
+
+The key tags are:
+
+| Tag | Purpose |
+|---|---|
+| `@param` | Documents each argument |
+| `@return` | Describes what the function returns |
+| `@examples` | Runnable examples (CRAN will execute these) |
+| `@export` | Makes the function available to users via `library()` |
+
+After writing or editing roxygen2 comments, run `devtools::document()` to regenerate the help files and `NAMESPACE`.
+
+## The NAMESPACE
+
+The `NAMESPACE` file controls what your package exposes to users and what it imports from other packages. You should never edit it by hand — `devtools::document()` generates it automatically from `@export` tags.
+
+For `inflateR`, it looks like this:
+
+```
+# Generated by roxygen2: do not edit by hand
+
+export(adjust_inflation)
+export(historical_value)
+```
+
+Only these two functions are visible to users. Any internal helper functions without `@export` are hidden.
+
+## Bundling data
+
+One of `inflateR`'s design decisions was to bundle CPI data inside the package rather than calling a live API at runtime. This makes the package work offline and in restricted environments.
+
+Data is stored as compressed `.rda` files in the `data/` directory. The workflow for creating them lives in `data-raw/`:
+
+```r
+# data-raw/cpi_data.R
+library(WDI)
+
+raw <- WDI(country = "GB", indicator = "FP.CPI.TOTL",
+           start = 1960, end = 2024)
+
+uk_cpi <- raw[, c("year", "FP.CPI.TOTL")]
+names(uk_cpi) <- c("year", "index")
+
+# Rescale so 2020 = 100
+base <- uk_cpi$index[uk_cpi$year == 2020]
+uk_cpi$index <- round((uk_cpi$index / base) * 100, 2)
+
+usethis::use_data(uk_cpi, overwrite = TRUE)
+```
+
+The `data-raw/` folder is excluded from the built package (via `.Rbuildignore`) — it's a reproducibility record, not something users need.
+
+Each dataset also needs a documentation file in `R/data.R`:
+
+```r
+#' UK CPI Data (1960-2024)
+#'
+#' Annual Consumer Price Index for the United Kingdom, sourced from the
+#' World Bank Development Indicators (FP.CPI.TOTL). Rescaled to 2020 = 100.
+#'
+#' @format A data frame with 65 rows and 2 columns:
+#' \describe{
+#'   \item{year}{Calendar year (integer)}
+#'   \item{index}{CPI index value (numeric, base 2020 = 100)}
+#' }
+#' @source \url{https://data.worldbank.org/indicator/FP.CPI.TOTL}
+"uk_cpi"
+```
+
+## Checking the package
+
+Before sharing or submitting a package, run a full check:
+
+```r
+devtools::check()
+```
+
+This runs the same battery of tests that CRAN uses — checking documentation, examples, dependencies, file structure, and more. The goal is:
+
+```
+0 errors | 0 warnings | 0 notes
+```
+
+Notes are acceptable if they have a clear explanation (e.g. `New submission` on a first CRAN submission). Errors and warnings must be fixed.
+
+## Installing locally
+
+During development, install the package from your local directory:
+
+```r
+devtools::install()
+```
+
+Or install directly from GitHub:
+
+```r
+devtools::install_github("charlescoverdale/inflateR")
+```
+
+Once installed, use it like any other package:
+
+```r
+library(inflateR)
+
+# What is £12 from 1963 worth today?
+adjust_inflation(12, 1963, "GBP")
+#> [1] 256.43
+
+# What would $1000 in 2020 have been worth in 1990?
+historical_value(1000, 1990, "USD", from_year = 2020)
+#> [1] 504.80
+```
+
+## Submitting to CRAN
+
+CRAN is the official R package repository — getting a package accepted means it's permanently installable with `install.packages()` by anyone in the world.
+
+The submission process:
+
+```r
+# 1. Run a final check
+devtools::check()
+
+# 2. Submit
+devtools::submit_cran()
+```
+
+CRAN will run automated pre-tests on Windows and Debian, then a human reviewer will assess the package. First submissions typically take 2–5 business days.
+
+Common rejection reasons:
+- Examples that take too long to run (keep them under a few seconds)
+- URLs in documentation that return errors
+- Missing or incorrectly formatted `LICENSE` file
+- Unexplained NOTEs in `R CMD check`
+
+`inflateR` is available on GitHub at [github.com/charlescoverdale/inflateR](https://github.com/charlescoverdale/inflateR) and has been submitted to CRAN.
