@@ -8,23 +8,35 @@ book:
   date: today
   chapters:
     - index.qmd
-    - 02-making-maps-beautiful.qmd
-    - 03-charts.qmd
-    - 04-basic-modelling.qmd
-    - 05-hypothesis-testing.qmd
-    - 06-forecasting.qmd
-    - 07-web-scraping.qmd
-    - 08-text-mining.qmd
-    - 09-geocoding.qmd
-    - 10-drivetime-analysis.qmd
-    - 11-raster-data.qmd
-    - 12-ABS-economic-data.qmd
-    - 13-Australian-election-data.qmd
-    - 14-Bayesian-for-the-common-man.qmd
-    - 15-causal-inference.qmd
-    - 16-functions.qmd
-    - 17-packages.qmd
-    - 18-UK-economic-data.qmd
+    - part: "Visualisation"
+      chapters:
+        - 02-making-maps-beautiful.qmd
+        - 03-charts.qmd
+    - part: "Analysis"
+      chapters:
+        - 04-basic-modelling.qmd
+        - 05-hypothesis-testing.qmd
+        - 06-forecasting.qmd
+    - part: "Working with Data"
+      chapters:
+        - 07-web-scraping.qmd
+        - 08-text-mining.qmd
+    - part: "Geospatial"
+      chapters:
+        - 09-geocoding.qmd
+        - 10-drivetime-analysis.qmd
+        - 11-raster-data.qmd
+    - part: "Economic Data"
+      chapters:
+        - 12-ABS-economic-data.qmd
+        - 13-Australian-election-data.qmd
+        - 18-UK-economic-data.qmd
+    - part: "Advanced Topics"
+      chapters:
+        - 14-Bayesian-for-the-common-man.qmd
+        - 15-causal-inference.qmd
+        - 16-functions.qmd
+        - 17-packages.qmd
   sidebar:
     tools:
       - icon: linkedin
