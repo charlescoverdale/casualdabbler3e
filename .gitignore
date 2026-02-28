@@ -2,6 +2,12 @@ docs/
 _book/
 .Rproj.user
 *.Rproj
+.Rhistory
+.RData
 
 /.quarto/
 **/*.quarto_ipynb
+
+# Quarto cache files
+*_cache/
+*_files/
