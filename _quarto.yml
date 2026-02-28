@@ -19,7 +19,7 @@ book:
     - 10-drivetime-analysis.qmd
     - 11-raster-data.qmd
     - 12-ABS-economic-data.qmd
-    - 13-Austrlaian-election-data.qmd
+    - 13-Australian-election-data.qmd
     - 14-Bayesian-for-the-common-man.qmd
     - 15-causal-inference.qmd
     - 16-functions.qmd
