@@ -19,6 +19,7 @@ library(sf) # Spatial data handling
 library(DT)
 library(eechidna)
 library(strayr)
+library(readaec)
 ```
 
 Some phenomenal Australian economists and statisticians have put together a handy election package called [eechidna](https://github.com/jforbes14/eechidna/). It includes three main data sets for the most recent Australia federal election (2022).
@@ -443,15 +444,109 @@ One of the more novel issues with the above analysis is that it's done on the el
 
 Instead of using one data point for a whole electorate (regardless of how big it is), we can fetch data from all 7,000 voting booths, the match it up with the corresponding local demographic data.
 
+## Current data with readaec
+
+One limitation of `eechidna` is that it bundles data as frozen snapshots — it was last updated for the 2019 election. The [readaec](https://github.com/charlescoverdale/readaec) package takes a different approach: it downloads data directly from the AEC on demand and caches it locally, so 2025 results are available immediately.
+
+```{r, warning=FALSE, message=FALSE}
+# Install if needed: remotes::install_github("charlescoverdale/readaec")
+
+# What elections are available?
+list_elections()
+```
+
+### 2025 election results
+
+```{r, warning=FALSE, message=FALSE}
+# Who won each seat in 2025?
+members_2025 <- get_members_elected(2025)
+head(members_2025, 10)
+```
+
+```{r, warning=FALSE, message=FALSE}
+# TPP results for 2025 — how did each division split between ALP and LNP?
+tpp_2025 <- get_tpp(2025)
+head(tpp_2025)
+```
+
+### Cross-election swing analysis
+
+The `get_swing()` function computes the change in two-party preferred vote between any two elections. A positive `alp_swing` means the seat moved toward Labor.
+
+```{r, warning=FALSE, message=FALSE}
+# Which seats swung most between 2022 and 2025?
+get_swing(2022, 2025) |>
+  select(division, state, alp_pct_from, alp_pct_to, alp_swing, winner_from, winner_to, seat_changed) |>
+  head(15)
+```
+
+```{r, warning=FALSE, message=FALSE}
+# How many seats changed hands?
+swing_2022_25 <- get_swing(2022, 2025)
+table(swing_2022_25$seat_changed)
+```
+
+### Richmond across time
+
+Earlier in this chapter we looked at Richmond's 2022 first preference result — the Greens preferences were decisive. With readaec we can extend that view across every election since 2007 to see the full story.
+
+```{r, warning=FALSE, message=FALSE}
+years <- list_elections()$year[list_elections()$has_downloads]
+
+tpp_richmond <- map_dfr(years, function(yr) {
+  get_tpp(yr) |>
+    filter(tolower(division) == "richmond")
+})
+
+ggplot(tpp_richmond, aes(x = year, y = alp_pct)) +
+  geom_line(colour = "#E4281B", linewidth = 1.2) +
+  geom_point(colour = "#E4281B", size = 3) +
+  geom_hline(yintercept = 50, linetype = "dashed", colour = "grey60") +
+  annotate("text", x = 2007.2, y = 51.5,
+           label = "50% — majority", size = 3, colour = "grey50", hjust = 0) +
+  scale_x_continuous(breaks = years) +
+  scale_y_continuous(limits = c(30, 70), labels = function(x) paste0(x, "%")) +
+  labs(
+    title    = "Richmond (NSW): ALP two-party preferred vote",
+    subtitle = "2007 to 2025 federal elections",
+    x        = NULL,
+    y        = "ALP TPP (%)",
+    caption  = "Source: AEC via readaec"
+  ) +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank())
+```
+
+```{r, warning=FALSE, message=FALSE}
+# How did Richmond's swing compare to the rest of NSW in 2022?
+get_swing(2019, 2022, state = "NSW") |>
+  mutate(highlight = tolower(division) == "richmond") |>
+  arrange(alp_swing) |>
+  mutate(division = factor(division, levels = division)) |>
+  ggplot(aes(x = division, y = alp_swing, fill = highlight)) +
+  geom_col() +
+  geom_hline(yintercept = 0, colour = "grey30") +
+  coord_flip() +
+  scale_fill_manual(values = c("FALSE" = "grey75", "TRUE" = "#E4281B"), guide = "none") +
+  labs(
+    title   = "NSW divisions: ALP swing 2019 to 2022",
+    subtitle = "Richmond highlighted in red",
+    x       = NULL,
+    y       = "ALP swing (percentage points)",
+    caption = "Source: AEC via readaec"
+  ) +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 7),
+        panel.grid.minor = element_blank())
+```
+
 ## Booth data
 
-The AEC maintains a [handy spreadsheet](http://results.aec.gov.au/20499/Website/Downloads/GeneralPollingPlacesDownload-20499.csv) of booth locations for recent federal elections. You can search for your local booth location (probably a school, church, or community center) in the table below.
+The AEC publishes polling place locations (lat/lon coordinates) and vote counts at the booth level for every federal election. The `readaec` package makes these easy to access — no manual CSV downloads required.
 
-```{r message=FALSE, error = TRUE, warning=FALSE, echo=FALSE, tidy=TRUE}
-# Find the list of 2016 booth locations
-
-booths <- read_csv("http://results.aec.gov.au/20499/Website/Downloads/GeneralPollingPlacesDownload-20499.csv", skip = 1)
-
+```{r message=FALSE, error = TRUE, warning=FALSE, echo=TRUE, tidy=TRUE}
+# Polling places for the 2025 election (with lat/lon coordinates)
+booths <- get_polling_places(2025)
 head(booths, n = 10)
 ```
 
@@ -461,13 +556,13 @@ What do these booths look like on a map? Let's reuse the CED map above and plot 
 ggplot() +
   geom_sf(data = ced2021) +
   geom_point(
-    data = booths, aes(x = Longitude, y = Latitude),
+    data = booths, aes(x = longitude, y = latitude),
     colour = "purple", size = 1, alpha = 0.3, inherit.aes = FALSE
   ) +
   labs(
     title = "Polling booths in Australia",
     subtitle = " ",
-    caption = "Data: Australian Electoral Commission 2016",
+    caption = "Data: Australian Electoral Commission 2025 via readaec",
     x = "",
     y = ""
   ) +
