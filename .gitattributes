@@ -1,3 +1,4 @@
 docs/ linguist-vendored
 docs/ linguist-documentation
 docs/ linguist-generated
+style.css linguist-documentation
