@@ -1,0 +1,96 @@
+/* ============================================================
+   R Cookbook for the Casual Dabbler — custom styles
+   ============================================================ */
+
+/* --- Base --- */
+
+body {
+  background-color: #fffff8;
+  color: #585858;
+  line-height: 1.7;
+}
+
+/* --- Headings --- */
+
+h1, h2, h3, h4, h5 {
+  color: #990024;
+}
+
+/* --- Links --- */
+
+a {
+  color: #1f65b7;
+  text-decoration: none;
+  display: inline-block;
+}
+
+a::after {
+  content: '';
+  display: block;
+  width: 0;
+  height: 1.75px;
+  background: #990024;
+  transition: width 0.3s;
+}
+
+a:hover::after {
+  width: 100%;
+}
+
+/* --- Code blocks --- */
+
+pre.sourceCode {
+  background-color: #fafafa;
+  border-radius: 6px;
+  padding: 0.85em 1em;
+  margin-bottom: 1em;
+}
+
+p code {
+  background-color: #f5f5f5;
+  border-radius: 3px;
+  padding: 0.1em 0.3em;
+}
+
+/* --- Figure captions --- */
+
+p.caption, .figure-caption {
+  color: #777;
+  font-size: 0.875em;
+  margin-top: 8px;
+  text-align: center;
+}
+
+/* --- Tables --- */
+
+table {
+  margin: 1em auto;
+}
+
+/* --- Sidebar --- */
+
+#quarto-sidebar {
+  background-color: #f5f5f540;
+}
+
+/* --- Footnotes --- */
+
+.footnotes {
+  color: #00000080;
+  font-size: 0.9em;
+}
+
+/* --- Images --- */
+
+img {
+  display: block;
+  margin: 0 auto;
+  background: transparent;
+}
+
+/* --- Plotly / interactive widgets --- */
+
+.plotly, .d3heatmap {
+  margin-left: 5%;
+  margin-right: 5%;
+}
