@@ -64,6 +64,8 @@ jobs:
           ), repos = 'https://cloud.r-project.org')"
 
       - name: Install GitHub packages
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
           Rscript -e "
             remotes::install_github('bbc/bbplot')
