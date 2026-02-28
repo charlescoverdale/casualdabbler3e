@@ -142,206 +142,158 @@ plot(ARIMA_forecast)
 
 ## Machine learning
 
-There probably isn't a hotter term this decade than 'machine learning'. But the principles of getting machines to be able to perform an operation based on an unknown input has been around for the best part of 100 years. 'Figure it out' is now an instruction you can tell a computer... and sure enough with some careful programming (and a truckload of data to conduct trial and error experiments on) - we can get pretty close.
+There probably isn't a hotter term this decade than 'machine learning'. But the principles of getting machines to perform operations based on unknown inputs has been around for the best part of 100 years. 'Figure it out' is now an instruction you can give a computer — and with careful programming and enough data, we can get pretty close.
 
-I used these handy resources when writing this guide:
-
--   [The Caret Package - Max Kuhn](https://topepo.github.io/caret/index.html)
-
--   [Caret Package - Selva Prabhakaran](https://www.machinelearningplus.com/machine-learning/caret-package/)
-
--   [Multivariate Adaptive Regression Splines](http://uc-r.github.io/mars)
-
-We'll start our ML journey by loading some packages.
-
-```{r}
-
-if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
-pacman::p_load(
-  ggplot2, caret, skimr, RANN, randomForest, gbm, xgboost,
-  caretEnsemble, C50, caTools
-)
-
-```
-
-We know that a model is just any function (of one or more variables) that helps to explain observations. The most basic models to explain a data set are `mean,` `min`, and `max`. These functions don't rely on any variables outside of the variable of interest itself.
-
-Moving to the slightly more abstract, we recall that a linear regression fits a straight line through a data set that minimizes the variance (i.e. the errors) between each point and the model line.
-
-To fit a linear regression, we use the `lm()` function in the following format:\
-`linear_model <- lm(y ~ x, dataset)`
-
-To make predictions using mod on the original data, we can call the predict() function:
-
-`predict_data <- predict(linear_model, dataset)`
+The modern standard for machine learning in R is `tidymodels` — a collection of packages that gives you a clean, consistent way to build, train, and evaluate models. It's replaced the older `caret` package and is now the go-to approach for most R users doing ML work.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
 
-# Let's use the mtcars dataset as an example
+library(tidymodels)
+library(ranger)  # Fast random forest engine
 
-# Fit a model to the mtcars data
+```
+
+## Linear regression with tidymodels
+
+We know that a model is just any function (of one or more variables) that helps to explain observations. Let's start with the simplest case: a linear regression predicting miles per gallon from horsepower using the `mtcars` dataset.
+
+The nice thing about `tidymodels` is that every model follows the same pattern: define the model spec, bundle it into a workflow, fit it, then evaluate. Once you've learned it once, swapping between model types is trivial.
+
+```{r,results='hide', warning=FALSE,message=FALSE}
+
 data(mtcars)
 
-# Build a linear model to explain mpg using hp
-mtcars_model <- lm(mpg ~ hp, mtcars)
+# Split into training (80%) and testing (20%) sets
+set.seed(123)
+mtcars_split <- initial_split(mtcars, prop = 0.8)
+mtcars_train <- training(mtcars_split)
+mtcars_test  <- testing(mtcars_split)
 
-# Run the model over the data
-mtcars_model_estimates <- predict(mtcars_model,mtcars)
+# Define a linear regression model
+lm_spec <- linear_reg() %>%
+  set_engine("lm")
 
-# Bind the original figures for mpg with the predicted figures for mpg
-mtcars_model_outputs <- cbind(Actual_mpg=mtcars$mpg,
-                              Actual_hp=mtcars$hp,
-                              Predicted_mpg=mtcars_model_estimates,
-                              Residuals=resid(mtcars_model),
-                              Fitted=fitted(mtcars_model))
+# Bundle model + formula into a workflow
+lm_workflow <- workflow() %>%
+  add_model(lm_spec) %>%
+  add_formula(mpg ~ hp)
 
-# Ensure the outputs are a df
-mtcars_model_outputs <- as.data.frame(mtcars_model_outputs)
-
-
+# Fit on training data
+lm_fit <- lm_workflow %>% fit(data = mtcars_train)
 
 ```
 
-We can see how well this model estimated the dataset by looking at the residuals on a plot.
+We can visualise how well the model fits by plotting predicted vs actual values.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-ggplot(mtcars_model_outputs) +
-  geom_line(aes(x = Actual_hp, y = Predicted_mpg), color = "blue") +
-  geom_point(aes(x = Actual_hp, y = Actual_mpg), color = "blue", alpha = 0.5) +
-  geom_segment(aes(x = Actual_hp, y = Actual_mpg, xend = Actual_hp, yend = Fitted),
-               color = "black", alpha = 0.8, linetype = "dotted") +
-  
+
+# Generate predictions on test set
+lm_preds <- predict(lm_fit, mtcars_test) %>% bind_cols(mtcars_test)
+
+ggplot(lm_preds, aes(x = hp)) +
+  geom_point(aes(y = mpg), colour = "blue", alpha = 0.6) +
+  geom_line(aes(y = .pred), colour = "blue") +
+  geom_segment(aes(y = mpg, yend = .pred, xend = hp),
+               colour = "black", alpha = 0.5, linetype = "dotted") +
   labs(
-    title = "Building a Regression Model",
+    title = "Linear Regression: Horsepower vs Fuel Efficiency",
     subtitle = "Higher horsepower cars get fewer miles per gallon",
-    caption = "Data: mtcars dataset",
+    caption = "Data: mtcars",
     x = "Horsepower",
     y = "Miles per Gallon"
   ) +
-  
   theme_minimal() +
   theme(
-    legend.position = "bottom",
     plot.title = element_text(face = "bold", size = 12),
     plot.subtitle = element_text(size = 11, margin = ggplot2::margin(b = 25)),
-    plot.caption = element_text(size = 8),
-    axis.text = element_text(size = 8),
-    axis.title.y = element_text(margin = ggplot2::margin(r = 3)),
-    axis.text.y = element_text(margin = ggplot2::margin(l = 10)), 
-    axis.line.x = element_line(color = "black", size = 0.4),
-    axis.ticks.x = element_line(color = "black", size = 0.4),
     panel.grid.minor = element_blank()
   )
 
-
 ```
 
-To quantify the model fit in a single number, we can use the Root Mean Square Error (RMSE).
+To put a number on how well the model performed, `yardstick` (part of `tidymodels`) gives us RMSE, MAE, and R² in a single call — no manual calculations needed.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
 
-# Manually calculate RMSE
-error <- mtcars_model_outputs$Actual_mpg - mtcars_model_outputs$Fitted
-mtcars_rmse_manual <- sqrt(mean(error^2))
+metrics(lm_preds, truth = mpg, estimate = .pred)
 
-# Alternative: Using Residuals column directly
-mtcars_rmse_residuals <- sqrt(mean(mtcars_model_outputs$Residuals^2))
-
-# Print results
-print(mtcars_rmse_manual)
-print(mtcars_rmse_residuals)
 ```
-
-So in very rough terms, we can say that the model predicts miles per gallon for a given level of horsepower with around 4 mpg of error.
 
 ## Random forest
 
-True 'machine learning' takes this process a step further by creating *many* models using *many* parameters to find the best explanatory variables. There's a myriad of ways to achieve this. One useful approach is Random Forest models. These algorithms combine decision trees (discussed below) to make predictions.
+True machine learning takes this further by building *many* models across *many* parameter combinations to find the best predictors. Random forests are one of the most reliable approaches — they combine hundreds of decision trees and average their predictions, reducing overfitting.
 
-In this section, we will use the `Boston` dataset from the `MASS` package to predict house prices using machine learning models. The dataset contains information on housing prices in the Boston area, with various predictors such as crime rate, number of rooms, and property tax rates. The target variable `medv` represents the median value of owner-occupied homes in \$1000s.
-
-We will first split the dataset into training and testing sets, train a Random Forest model, evaluate its performance, and then compare it with a linear regression model using `tidymodels`.
+We'll use the `Boston` housing dataset to predict median home values (`medv`) from neighbourhood characteristics.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
 
-# Load necessary libraries
-library(MASS)
-library(caret)
+# Load Boston dataset
+data("Boston", package = "MASS")
 
-# Load the Boston housing dataset
-data("Boston")
-
-# Splitting the dataset into training (80%) and testing (20%) sets
+# Split into training (80%) and testing (20%)
 set.seed(123)
-train_index <- createDataPartition(Boston$medv, p=0.8, list=FALSE)
-train_data <- Boston[train_index, ]
-test_data <- Boston[-train_index, ]
-
-# Display the first few rows of each dataset to confirm the split
-head(train_data)
-head(test_data)
-```
-
-We will now train a Random Forest model using the `randomForest` package. The algorithm builds multiple decision trees and averages their predictions to improve accuracy and reduce overfitting.
-
-```{r,results='hide', warning=FALSE,message=FALSE}
-
-# Train a Random Forest model with 100 trees
-model <- randomForest::randomForest(medv ~ ., data=train_data, ntree=100)
-
-# Make predictions on the test set
-predictions <- predict(model, test_data)
+boston_split <- initial_split(Boston, prop = 0.8)
+boston_train <- training(boston_split)
+boston_test  <- testing(boston_split)
 
 ```
 
-We use Root Mean Square Error (RMSE) to measure the model's performance as we did in the previous section.
+We define a random forest model using `rand_forest()` with the `ranger` engine — a fast, modern implementation.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
 
-# Calculate RMSE
-rmse <- sqrt(mean((predictions - test_data$medv)^2))
-
-# Print RMSE result
-print(paste("RMSE:", round(rmse, 2)))
-
-```
-
-To compare performance of our `randomForest` model, we train a simple linear regression model using the `tidymodels` framework. Linear regression attempts to fit a straight line that best represents the relationship between predictors and the target variable.
-
-```{r,results='hide', warning=FALSE,message=FALSE}
-
-# Load necessary library
-library(tidymodels)
-
-# Set a seed for reproducibility
-set.seed(123)
-
-# Define a linear regression model
-ml_model <- linear_reg() %>% 
-  set_engine("lm") %>% 
+# Define random forest model
+rf_spec <- rand_forest(trees = 500) %>%
+  set_engine("ranger") %>%
   set_mode("regression")
 
-# Create a workflow that includes the model and the formula
-tidymodels_workflow <- workflow() %>% 
-  add_model(ml_model) %>% 
+# Bundle into workflow
+rf_workflow <- workflow() %>%
+  add_model(rf_spec) %>%
   add_formula(medv ~ .)
 
-# Train the linear regression model
-trained_model <- tidymodels_workflow %>% fit(data = train_data)
+# Fit on training data
+rf_fit <- rf_workflow %>% fit(data = boston_train)
 
 ```
 
-After training the model, we can use it to make predictions on the `test_data`. The `predict()` function returns predicted values, which are then combined with the actual test data for comparison.
-
-The `metrics()` function calculates various performance metrics, such as RMSE, MAE, and R², to evaluate the model's predictive accuracy. The `truth` argument specifies the actual values (`medv`), and the `estimate` argument specifies the predicted values (`.pred`).
+Now evaluate performance on the held-out test set.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
 
-# Make predictions using the trained model
-predictions <- predict(trained_model, test_data) %>% bind_cols(test_data)
+# Generate predictions
+rf_preds <- predict(rf_fit, boston_test) %>% bind_cols(boston_test)
 
-# Evaluate model performance using metrics function
-metrics(predictions, truth = medv, estimate = .pred)
+# Evaluate
+metrics(rf_preds, truth = medv, estimate = .pred)
+
 ```
+
+## Comparing models
+
+One of the best things about `tidymodels` is how easy it is to swap models in and out. Here we run a plain linear regression on the same Boston data and compare RMSE directly — same workflow, different model spec.
+
+```{r,results='hide', warning=FALSE,message=FALSE}
+
+# Linear regression on Boston data
+lm_boston_spec <- linear_reg() %>% set_engine("lm")
+
+lm_boston_fit <- workflow() %>%
+  add_model(lm_boston_spec) %>%
+  add_formula(medv ~ .) %>%
+  fit(data = boston_train)
+
+lm_boston_preds <- predict(lm_boston_fit, boston_test) %>% bind_cols(boston_test)
+
+# Compare RMSE
+rf_rmse  <- rmse(rf_preds,       truth = medv, estimate = .pred)$.estimate
+lm_rmse  <- rmse(lm_boston_preds, truth = medv, estimate = .pred)$.estimate
+
+cat("Random forest RMSE:", round(rf_rmse, 2), "\n")
+cat("Linear regression RMSE:", round(lm_rmse, 2), "\n")
+
+```
+
+The random forest will typically outperform linear regression on this dataset — it captures non-linear relationships between neighbourhood characteristics and home values that a straight line cannot.
 
 As we see, our `randomForest` model performed much better, with a RMSE of 2.96 compared to 4.58.
