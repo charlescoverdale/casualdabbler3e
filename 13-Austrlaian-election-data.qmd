@@ -18,7 +18,7 @@ library(readxl) # Reading Excel files
 library(sf) # Spatial data handling
 library(DT)
 library(eechidna)
-library(absmapsdata)
+library(strayr)
 ```
 
 Some phenomenal Australian economists and statisticians have put together a handy election package called [eechidna](https://github.com/jforbes14/eechidna/). It includes three main data sets for the most recent Australia federal election (2022).
@@ -73,7 +73,9 @@ Durack in Western Australia (1.63 million square kilometres) is by far the large
 Let's make a map to make things easier.
 
 ```{r,figures-side1, fig.show="hold", out.width="50%",results='hide', warning=FALSE,message=FALSE}
-CED_map <- absmapsdata::ced2021 %>%
+ced2021 <- strayr::read_absmap("ced2021")
+
+CED_map <- ced2021 %>%
   ggplot() +
   geom_sf() +
   labs(
@@ -126,8 +128,8 @@ We see the data in our DivisionNm variable is in UPPERCASE while our ced_name_20
 We can then then join the two dataframes using the left_join function.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-# Pull in the electorate shapefiles from the absmapsdata package
-electorates <- ced2021
+# Pull in the electorate shapefiles via strayr
+electorates <- strayr::read_absmap("ced2021")
 
 # Make the DivisionNm Titlecase
 tcp22$DivisionNm <- str_to_title(tcp22$DivisionNm)

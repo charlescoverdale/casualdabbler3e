@@ -24,7 +24,6 @@ library(rlang)
 library(broom)
 library(Census2016)
 library(strayr)
-library(absmapsdata)
 library(officer)
 ```
 
