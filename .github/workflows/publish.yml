@@ -72,7 +72,7 @@ jobs:
             remotes::install_github('hughparsonage/Census2016')
             remotes::install_github('runapp-aus/strayr')
             remotes::install_github('jforbes14/eechidna')
-            remotes::install_github('MattCowgill/ggparliament')
+            remotes::install_github('zmeers/ggparliament')
           "
 
       - name: Render and Publish
