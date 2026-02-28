@@ -26,7 +26,7 @@ library(viridis)    # Color scales for ggplot2 and rasterVis
 library(RColorBrewer) # Color palettes
 
 # Other Utilities
-library(absmapsdata) # Australian Bureau of Statistics map data
+library(strayr)      # Australian Bureau of Statistics map data
 
 ```
 
@@ -42,12 +42,12 @@ plot(rainfall)
 
 Straight away we see this is for the whole of Australia (and then some). We're only interested in what's going on in QLD... so let's crop the data down to scale. For this we'll need to import a shapefile for QLD.
 
-The easiest way to do this is using the absmapsdata package - importing a shapefile of Australia then filtering for only Queensland.
+The easiest way to do this is using the `strayr` package — it downloads ABS shapefiles on demand without needing to install a large data package.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
 # Import a polygon for the state of Queensland
-QLD_shape <- absmapsdata::state2016 %>%
-             filter(state_name_2016=="Queensland")
+QLD_shape <- strayr::read_absmap("state2016") %>%
+             filter(state_name_2016 == "Queensland")
 
 ```
 
