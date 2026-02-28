@@ -4,8 +4,6 @@ This repo contains the code used to publish [R Cookbook for the Casual Dabbler (
 
 RCCD1e was originally published in 2020 as a side project during the COVID-19 lockdowns in Melbourne. A lot has changed in the R community since, and as such the 3rd edition includes significant revisions — including a move from Bookdown to [Quarto](https://quarto.org/).
 
-The book is 100% written in R and published using Quarto.
-
 ## Current chapters
 
 #### 1.0 Visualisation
