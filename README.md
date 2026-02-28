@@ -8,37 +8,40 @@ The book is 100% written in R and published using Quarto.
 
 ## Current chapters
 
-#### Section 1: Visualisation
+#### Visualisation
 
 1. Making maps beautiful
 2. Charts
 
-#### Section 2: Analysis
+#### Analysis
 
 3. Basic modelling
 4. Hypothesis testing
 5. Forecasting
-6. Web-scraping
+
+#### Working with Data
+
+6. Web scraping
 7. Text mining
 
-#### Section 3: Geospatial
+#### Geospatial
 
 8. Geocoding
 9. Drivetime analysis
 10. Raster data
 
-#### Section 4: Australian economy
+#### Economic Data
 
 11. ABS economic data
 12. Australian election data
+13. UK economic data
 
-#### Section 5: Advanced topics
+#### Advanced Topics
 
-13. Bayesian for the common man
-14. Causal inference
-15. Functions
-16. Packages
-17. UK economic data
+14. Bayesian for the common man
+15. Causal inference
+16. Functions
+17. Packages
 
 ## Limitations
 
