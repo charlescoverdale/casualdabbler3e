@@ -13,21 +13,22 @@ A 'drive time' describes how far you can drive (i.e in a car on a public road) i
 To get started, let's install and load packages.
 
 ```{r, warning=FALSE, message=FALSE, error=FALSE, fig.keep = TRUE}
-
-#Loads the required required packages
-pacman::p_load(ggmap, 
-               tmaptools, 
-               RCurl, 
-               jsonlite, 
-               tidyverse, 
-               leaflet, 
-               writexl, 
-               readr, 
-               readxl, 
-               sf, 
-               mapview, 
-               rgdal, 
-               osrm)
+# Loads the required required packages
+pacman::p_load(
+  ggmap,
+  tmaptools,
+  RCurl,
+  jsonlite,
+  tidyverse,
+  leaflet,
+  writexl,
+  readr,
+  readxl,
+  sf,
+  mapview,
+  rgdal,
+  osrm
+)
 ```
 
 ## OSRM isochrones
@@ -41,16 +42,15 @@ The downside is that the polygons it generates are pretty chunky... i.e. it does
 Uncomment the leaflet function below to view an interactive map.
 
 ```{r, warning=FALSE, message=FALSE, error=FALSE, fig.keep = TRUE}
-
 # Create a dataframe with the latitude and longitude
 locations <- tibble::tribble(
-  ~place,     ~lon,     ~lat,
+  ~place, ~lon, ~lat,
   "Melbourne", 144.9631, -37.8136
 )
 
 # Run it through the osrm package to calculate isochrones
 iso <- osrmIsochrone(
-  loc = c(locations$lon, locations$lat), 
+  loc = c(locations$lon, locations$lat),
   breaks = seq(from = 0, to = 30, by = 5),
   res = 50
 )

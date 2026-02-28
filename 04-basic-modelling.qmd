@@ -11,8 +11,7 @@ The source data I use in this example is Melbourne's weather record over a 12 mo
 Before we get started, it is useful to have some packages up and running.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
-#Useful packages for regression
+# Useful packages for regression
 library(readr)
 library(readxl)
 library(ggplot2)
@@ -25,7 +24,7 @@ library(cowplot)
 I've put together a csv file of weather observations in Melbourne in 2019. We begin our model by downloading the data from Github.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-#Input data
+# Input data
 link <- "data/MEL_weather_2019.csv"
 
 # We'll read this data in as a dataframe
@@ -39,8 +38,7 @@ head(MEL_weather_2019)
 This data is relatively clean. One handy change to make is to make the date into a dynamic format (to easily switch between months, years, etc).
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
-#Add a proper date column
+# Add a proper date column
 MEL_weather_2019 <- MEL_weather_2019 %>%
   mutate(Date = make_date(Year, Month, Day))
 ```
@@ -48,29 +46,29 @@ MEL_weather_2019 <- MEL_weather_2019 %>%
 We also notice that some of the column names have symbols in them. This can be tricky to work with, so let's rename some columns into something more manageable.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
+# Rename key df variables
+names(MEL_weather_2019)[4] <- "Solar_exposure"
+names(MEL_weather_2019)[5] <- "Rainfall"
+names(MEL_weather_2019)[6] <- "Max_temp"
 
-#Rename key df variables
-names(MEL_weather_2019)[4]<- "Solar_exposure"
-names(MEL_weather_2019)[5]<- "Rainfall"
-names(MEL_weather_2019)[6]<- "Max_temp"
-    
 head(MEL_weather_2019)
 ```
 
 We're aiming to investigate if other weather variables can predict maximum temperatures. Solar exposure seems like a plausible place to start. We start by plotting the two variables to if there is a trend.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
-#Plot the data
-MEL_temp_investigate <- ggplot(MEL_weather_2019)+
-  geom_point(aes(y=Max_temp, x=Solar_exposure),col="grey")+
-  labs(title = "Does solar exposure drive temperature in Melbourne?",
-  caption = "Data: Bureau of Meteorology 2020") +
-  xlab("Solar exposure")+
-  ylab("Maximum temperature °C")+
-  scale_x_continuous(expand=c(0,0))+
-  theme_bw()+
-  theme(axis.text=element_text(size=10))+
+# Plot the data
+MEL_temp_investigate <- ggplot(MEL_weather_2019) +
+  geom_point(aes(y = Max_temp, x = Solar_exposure), col = "grey") +
+  labs(
+    title = "Does solar exposure drive temperature in Melbourne?",
+    caption = "Data: Bureau of Meteorology 2020"
+  ) +
+  xlab("Solar exposure") +
+  ylab("Maximum temperature °C") +
+  scale_x_continuous(expand = c(0, 0)) +
+  theme_bw() +
+  theme(axis.text = element_text(size = 10)) +
   theme(panel.grid.minor = element_blank())
 
 MEL_temp_investigate
@@ -79,19 +77,18 @@ MEL_temp_investigate
 Eyeballing the chart above, there seems to be a correlation between the two data sets. We'll do one more quick plot to analyse the data. What is the distribution of temperature?
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
-ggplot(MEL_weather_2019, aes(x=Max_temp)) + 
- geom_histogram(aes(y=..density..), colour="black", fill="lightblue")+
- geom_density(alpha=.5, fill="grey",colour="darkblue")+
-  
- scale_x_continuous(breaks=c(5,10,15,20,25,30,35,40,45),
-                    expand=c(0,0))+
-  xlab("Temperature")+
-  ylab("Density")+
-  
- theme_bw()+
- theme(axis.text=element_text(size=12))+
- theme(panel.grid.minor = element_blank())
+ggplot(MEL_weather_2019, aes(x = Max_temp)) +
+  geom_histogram(aes(y = ..density..), colour = "black", fill = "lightblue") +
+  geom_density(alpha = .5, fill = "grey", colour = "darkblue") +
+  scale_x_continuous(
+    breaks = c(5, 10, 15, 20, 25, 30, 35, 40, 45),
+    expand = c(0, 0)
+  ) +
+  xlab("Temperature") +
+  ylab("Density") +
+  theme_bw() +
+  theme(axis.text = element_text(size = 12)) +
+  theme(panel.grid.minor = element_blank())
 ```
 
 We can see here the data is right skewed (i.e. the mean will be greater than the median). We'll need to keep this in mind. Let's start building a model.
@@ -101,9 +98,8 @@ We can see here the data is right skewed (i.e. the mean will be greater than the
 We start by looking whether a simple linear regression of solar exposure seems to be correlated with temperature. In R, we can use the linear model (lm) function.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
-#Create a straight line estimate to fit the data
-temp_model <- lm(Max_temp~Solar_exposure, data=MEL_weather_2019)
+# Create a straight line estimate to fit the data
+temp_model <- lm(Max_temp ~ Solar_exposure, data = MEL_weather_2019)
 ```
 
 ## Analyse the model fit
@@ -111,8 +107,7 @@ temp_model <- lm(Max_temp~Solar_exposure, data=MEL_weather_2019)
 Let's see how well solar exposure explains changes in temperature
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
-#Call a summary of the model
+# Call a summary of the model
 summary(temp_model)
 ```
 
@@ -123,51 +118,57 @@ The adjusted R squared value (one measure of model fit) is 0.3596. Furthermore t
 We can use this lm function to predict values of temperature based on the level of solar exposure. We can then compare this to the actual temperature record, and see how well the model fits the data set.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
-#Use this lm model to predict the values
+# Use this lm model to predict the values
 MEL_weather_2019 <- MEL_weather_2019 %>%
- mutate(predicted_temp=predict(temp_model,newdata=MEL_weather_2019))
+  mutate(predicted_temp = predict(temp_model, newdata = MEL_weather_2019))
 
-#Calculate the prediction interval
-prediction_interval <- predict(temp_model, 
-                               newdata=MEL_weather_2019, 
-                               interval = "prediction")
+# Calculate the prediction interval
+prediction_interval <- predict(temp_model,
+  newdata = MEL_weather_2019,
+  interval = "prediction"
+)
 summary(prediction_interval)
 
-#Bind this prediction interval data back to the main set
-MEL_weather_2019 <- cbind(MEL_weather_2019,prediction_interval)
+# Bind this prediction interval data back to the main set
+MEL_weather_2019 <- cbind(MEL_weather_2019, prediction_interval)
 MEL_weather_2019
 ```
 
 Model fit is easier to interpret graphically. Let's plot the data with the model overlaid.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
-#Plot a chart with data and model on it
-MEL_temp_predicted <- 
-ggplot(MEL_weather_2019)+
-  geom_point(aes(y=Max_temp, x=Solar_exposure),
-                 col="grey")+
-  geom_line(aes(y=predicted_temp,x=Solar_exposure),
-                col="blue")+
-  geom_smooth(aes(y=Max_temp, x= Solar_exposure), 
-              method=lm)+
-  geom_line(aes(y=lwr,x=Solar_exposure),
-            colour="red", linetype="dashed")+
-  geom_line(aes(y=upr,x=Solar_exposure),
-            colour="red", linetype="dashed")+
-  labs(title = 
-       "Does solar exposure drive temperature in Melbourne?",
-       subtitle = 'Investigation using linear regression',
-       caption = "Data: Bureau of Meteorology 2020") +
-  xlab("Solar exposure")+
-  ylab("Maximum temperature °C")+
-  
-  scale_x_continuous(expand=c(0,0),
-                   breaks=c(0,5,10,15,20,25,30,35,40))+
- 
-  theme_bw()+
-  theme(axis.text=element_text(size=10))+
+# Plot a chart with data and model on it
+MEL_temp_predicted <-
+  ggplot(MEL_weather_2019) +
+  geom_point(aes(y = Max_temp, x = Solar_exposure),
+    col = "grey"
+  ) +
+  geom_line(aes(y = predicted_temp, x = Solar_exposure),
+    col = "blue"
+  ) +
+  geom_smooth(aes(y = Max_temp, x = Solar_exposure),
+    method = lm
+  ) +
+  geom_line(aes(y = lwr, x = Solar_exposure),
+    colour = "red", linetype = "dashed"
+  ) +
+  geom_line(aes(y = upr, x = Solar_exposure),
+    colour = "red", linetype = "dashed"
+  ) +
+  labs(
+    title =
+      "Does solar exposure drive temperature in Melbourne?",
+    subtitle = "Investigation using linear regression",
+    caption = "Data: Bureau of Meteorology 2020"
+  ) +
+  xlab("Solar exposure") +
+  ylab("Maximum temperature °C") +
+  scale_x_continuous(
+    expand = c(0, 0),
+    breaks = c(0, 5, 10, 15, 20, 25, 30, 35, 40)
+  ) +
+  theme_bw() +
+  theme(axis.text = element_text(size = 10)) +
   theme(panel.grid.minor = element_blank())
 
 MEL_temp_predicted
@@ -178,8 +179,7 @@ This chart includes the model (blue line), confidence interval (grey band around
 ## Analyse the residuals
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
-#Add the residuals to the series
+# Add the residuals to the series
 residuals_temp_predict <- MEL_weather_2019 %>%
   add_residuals(temp_model)
 ```
@@ -187,22 +187,19 @@ residuals_temp_predict <- MEL_weather_2019 %>%
 Plot these residuals in a chart.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
-residuals_temp_predict_chart <- 
-  ggplot(data=residuals_temp_predict,
-         aes(x=Solar_exposure, y=resid), col="grey")+
-         
-         geom_ref_line(h=0,colour="blue", size=1)+
-         geom_point(col="grey")+
-  
-         xlab("Solar exposure")+
-         ylab("Maximum temperature (°C)")+
-         theme_bw() +
-         labs(title = "Residual values from the linear model")+
-  
-         theme(axis.text=element_text(size=12))+
-  
-         scale_x_continuous(expand=c(0,0))
+residuals_temp_predict_chart <-
+  ggplot(
+    data = residuals_temp_predict,
+    aes(x = Solar_exposure, y = resid), col = "grey"
+  ) +
+  geom_ref_line(h = 0, colour = "blue", size = 1) +
+  geom_point(col = "grey") +
+  xlab("Solar exposure") +
+  ylab("Maximum temperature (°C)") +
+  theme_bw() +
+  labs(title = "Residual values from the linear model") +
+  theme(axis.text = element_text(size = 12)) +
+  scale_x_continuous(expand = c(0, 0))
 residuals_temp_predict_chart
 ```
 
@@ -213,9 +210,8 @@ The linear model above is \*okay\*, but can we make it better? Let's start by ad
 Rainfall data might assist our model in predicting temperature. Let's add in that variable and analyse the results.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
-temp_model_2 <- 
-lm(Max_temp ~ Solar_exposure + Rainfall, data=MEL_weather_2019)
+temp_model_2 <-
+  lm(Max_temp ~ Solar_exposure + Rainfall, data = MEL_weather_2019)
 summary(temp_model_2)
 ```
 
@@ -224,11 +220,12 @@ We can see that adding in rainfall made the model better (R squared value has in
 Next, we consider whether solar exposure and rainfall might be related to each other, as well as to temperature. For our third temperature model, we add an interaction variable between solar exposure and rainfall.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
-temp_model_3 <- lm(Max_temp ~ Solar_exposure + 
-                              Rainfall + 
-                              Solar_exposure:Rainfall, 
-                              data=MEL_weather_2019)
+temp_model_3 <- lm(
+  Max_temp ~ Solar_exposure +
+    Rainfall +
+    Solar_exposure:Rainfall,
+  data = MEL_weather_2019
+)
 summary(temp_model_3)
 ```
 
@@ -244,23 +241,25 @@ For simplicity, we will introduce a new variable (Day_number) which is the day o
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
 MEL_weather_2019 <- MEL_weather_2019 %>%
-    mutate(Day_number=row_number())
+  mutate(Day_number = row_number())
 head(MEL_weather_2019)
 ```
 
 Using the same dataset as above, let's plot temperature in Melbourne in 2019.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-MEL_temp_chart <- 
-ggplot(MEL_weather_2019)+
+MEL_temp_chart <-
+  ggplot(MEL_weather_2019) +
   geom_line(aes(x = Day_number, y = Max_temp)) +
-  labs(title = 'Melbourne temperature profile',
-  subtitle = 'Daily maximum temperature recorded in Melbourne in 2019',
-  caption = "Data: Bureau of Meteorology 2020") +
-  xlab("Day of the year")+
-  ylab("Temperature")+
-  theme_bw()                    
-                
+  labs(
+    title = "Melbourne temperature profile",
+    subtitle = "Daily maximum temperature recorded in Melbourne in 2019",
+    caption = "Data: Bureau of Meteorology 2020"
+  ) +
+  xlab("Day of the year") +
+  ylab("Temperature") +
+  theme_bw()
+
 MEL_temp_chart
 ```
 
@@ -269,24 +268,27 @@ We can see we'll need a non-linear model to fit this data.
 Below we create a few different models. We start with a normal straight line model, then add an x² and x³ model. We then use these models and the 'predict' function to see what temperatures they forecast based on the input data.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-#Create a straight line estimate to fit the data
-poly1 <- lm(Max_temp ~ poly(Day_number,1,raw=TRUE),
-         data=MEL_weather_2019)
+# Create a straight line estimate to fit the data
+poly1 <- lm(Max_temp ~ poly(Day_number, 1, raw = TRUE),
+  data = MEL_weather_2019
+)
 summary(poly1)
-#Create a polynominal of order 2 to fit this data
-poly2 <- lm(Max_temp ~ poly(Day_number,2,raw=TRUE),
-         data=MEL_weather_2019)
+# Create a polynominal of order 2 to fit this data
+poly2 <- lm(Max_temp ~ poly(Day_number, 2, raw = TRUE),
+  data = MEL_weather_2019
+)
 summary(poly2)
-#Create a polynominal of order 3 to fit this data
-poly3 <- lm(Max_temp ~ poly(Day_number,3,raw=TRUE),
-         data=MEL_weather_2019)
+# Create a polynominal of order 3 to fit this data
+poly3 <- lm(Max_temp ~ poly(Day_number, 3, raw = TRUE),
+  data = MEL_weather_2019
+)
 summary(poly3)
 
-#Use these models to predict
+# Use these models to predict
 MEL_weather_2019 <- MEL_weather_2019 %>%
-  mutate(poly1values=predict(poly1,newdata=MEL_weather_2019))%>%
-  mutate(poly2values=predict(poly2,newdata=MEL_weather_2019))%>%
-  mutate(poly3values=predict(poly3,newdata=MEL_weather_2019))
+  mutate(poly1values = predict(poly1, newdata = MEL_weather_2019)) %>%
+  mutate(poly2values = predict(poly2, newdata = MEL_weather_2019)) %>%
+  mutate(poly3values = predict(poly3, newdata = MEL_weather_2019))
 
 head(MEL_weather_2019)
 ```
@@ -296,36 +298,38 @@ In the table above we can see the estimates for that data point from the various
 To see how well the models did graphically, we can plot the original data series with the polynominal models overlaid.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-#Plot a chart with all models on it
-MEL_weather_model_chart <- 
-ggplot(MEL_weather_2019)+
-  geom_line(aes(x=Day_number, y= Max_temp),col="grey")+
-  geom_line(aes(x=Day_number, y= poly1values),col="red") +
-  geom_line(aes(x=Day_number, y= poly2values),col="green")+
-  geom_line(aes(x=Day_number, y= poly3values),col="blue")+
-  
-  #Add text annotations
-  geom_text(x=10,y=18,label="data series",col="grey",hjust=0)+
-  geom_text(x=10,y=16,label="linear",col="red",hjust=0)+
-  geom_text(x=10,y=13,label=parse(text="x^2"),col="green",hjust=0)+
-  geom_text(x=10,y=10,label=parse(text="x^3"),col="blue",hjust=0)+
-  
-  labs(title = "Estimating Melbourne's temperature",
-       subtitle = 'Daily maximum temperature recorded in Melbourne in 2019',
-       caption = "Data: Bureau of Meteorology 2020") +
-  
-  xlim(0,366)+
-  ylim(10,45)+
-scale_x_continuous(breaks=
-  c(15,45,75,105,135,165,195,225,255,285,315,345),
-  labels=c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
-  expand=c(0,0),
-  limits=c(0,366)) +
-  scale_y_continuous(breaks=c(10,15,20,25,30,35,40,45)) +
-  xlab("")+
-  ylab("°C")+
-  theme_bw()+
-  theme(axis.text=element_text(size=12))+
+# Plot a chart with all models on it
+MEL_weather_model_chart <-
+  ggplot(MEL_weather_2019) +
+  geom_line(aes(x = Day_number, y = Max_temp), col = "grey") +
+  geom_line(aes(x = Day_number, y = poly1values), col = "red") +
+  geom_line(aes(x = Day_number, y = poly2values), col = "green") +
+  geom_line(aes(x = Day_number, y = poly3values), col = "blue") +
+
+  # Add text annotations
+  geom_text(x = 10, y = 18, label = "data series", col = "grey", hjust = 0) +
+  geom_text(x = 10, y = 16, label = "linear", col = "red", hjust = 0) +
+  geom_text(x = 10, y = 13, label = parse(text = "x^2"), col = "green", hjust = 0) +
+  geom_text(x = 10, y = 10, label = parse(text = "x^3"), col = "blue", hjust = 0) +
+  labs(
+    title = "Estimating Melbourne's temperature",
+    subtitle = "Daily maximum temperature recorded in Melbourne in 2019",
+    caption = "Data: Bureau of Meteorology 2020"
+  ) +
+  xlim(0, 366) +
+  ylim(10, 45) +
+  scale_x_continuous(
+    breaks =
+      c(15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345),
+    labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+    expand = c(0, 0),
+    limits = c(0, 366)
+  ) +
+  scale_y_continuous(breaks = c(10, 15, 20, 25, 30, 35, 40, 45)) +
+  xlab("") +
+  ylab("°C") +
+  theme_bw() +
+  theme(axis.text = element_text(size = 12)) +
   theme(panel.grid.minor = element_blank())
 
 MEL_weather_model_chart
@@ -336,57 +340,63 @@ We can see in the chart above the polynomial models do much better at fitting th
 Just how variant are they? We can look at the residuals to find out. The residuals is the gap between the observed data point (i.e. the grey line) and our model.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
-#Get the residuals for poly1
+# Get the residuals for poly1
 residuals_poly1 <- MEL_weather_2019 %>%
   add_residuals(poly1)
-residuals_poly1_chart <- 
-ggplot(data=residuals_poly1,aes(x=Day_number, y=resid))+
-  geom_ref_line(h=0,colour="red", size=1)+
-  geom_line()+
-  xlab("")+
-  ylab("°C")+
-  theme_bw()+
-  theme(axis.text=element_text(size=12))+
-  theme(axis.ticks.x=element_blank(),
-  axis.text.x=element_blank())
+residuals_poly1_chart <-
+  ggplot(data = residuals_poly1, aes(x = Day_number, y = resid)) +
+  geom_ref_line(h = 0, colour = "red", size = 1) +
+  geom_line() +
+  xlab("") +
+  ylab("°C") +
+  theme_bw() +
+  theme(axis.text = element_text(size = 12)) +
+  theme(
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_blank()
+  )
 residuals_poly1_chart
-#Get the residuals for poly2
-residuals_poly2 <- MEL_weather_2019%>%
+# Get the residuals for poly2
+residuals_poly2 <- MEL_weather_2019 %>%
   add_residuals(poly2)
-residuals_poly2_chart <- ggplot(data=residuals_poly2,aes(x=Day_number, y=resid))+
-  geom_ref_line(h=0,colour="green", size=1)+
-  geom_line()+
-  xlab("")+
-  ylab("°C")+
-  theme_bw()+
-  theme(axis.text=element_text(size=12))+
-  theme(axis.ticks.x=element_blank(),
-  axis.text.x=element_blank())
-  
+residuals_poly2_chart <- ggplot(data = residuals_poly2, aes(x = Day_number, y = resid)) +
+  geom_ref_line(h = 0, colour = "green", size = 1) +
+  geom_line() +
+  xlab("") +
+  ylab("°C") +
+  theme_bw() +
+  theme(axis.text = element_text(size = 12)) +
+  theme(
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_blank()
+  )
+
 residuals_poly2_chart
-#Get the residuals for poly3
+# Get the residuals for poly3
 residuals_poly3 <- MEL_weather_2019 %>%
   add_residuals(poly3)
-residuals_poly3_chart <- ggplot(data=residuals_poly3,aes(x=Day_number, y=resid))+
-  geom_ref_line(h=0,colour="blue", size=1)+
-  geom_line()+
-  theme_bw()+
-  theme(axis.text=element_text(size=12))+
- scale_x_continuous(breaks=
- c(15,45,75,105,135,165,195,225,255,285,315,345),
- labels=c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
- expand=c(0,0),
- limits=c(0,366))+
- xlab("")+
- ylab("°C")
-  
+residuals_poly3_chart <- ggplot(data = residuals_poly3, aes(x = Day_number, y = resid)) +
+  geom_ref_line(h = 0, colour = "blue", size = 1) +
+  geom_line() +
+  theme_bw() +
+  theme(axis.text = element_text(size = 12)) +
+  scale_x_continuous(
+    breaks =
+      c(15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345),
+    labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+    expand = c(0, 0),
+    limits = c(0, 366)
+  ) +
+  xlab("") +
+  ylab("°C")
+
 residuals_poly3_chart
 three_charts_single_page <- plot_grid(
-  residuals_poly1_chart, 
-  residuals_poly2_chart, 
+  residuals_poly1_chart,
+  residuals_poly2_chart,
   residuals_poly3_chart,
-  ncol=1,nrow=3,label_size=16)
+  ncol = 1, nrow = 3, label_size = 16
+)
 three_charts_single_page
 ```
 

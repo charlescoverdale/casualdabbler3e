@@ -11,18 +11,16 @@ There's two main ways to access this data. Option 1, poorly formatted [spreadshe
 There's several R packages out there that either ping the ONS' API or web scrape the data. Kostas Vasilopoulos has produced one of the better ones (and it's on CRAN) called `onsr`.
 
 ```{r}
-
 library(onsr)
 
-#Get a list of all datasets available
+# Get a list of all datasets available
 ons_ids()
 
 ons_datasets()
 
 onsgdp <- onsr::ons_get(id = "gdp-to-four-decimal-places")
 
-head(onsgdp,100)
-
+head(onsgdp, 100)
 ```
 
 ## Nomis
@@ -32,7 +30,6 @@ Census data, as well as economic and social data sets that take into account loc
 The last UK census was in 2021. While there is a census slated for 2031, there is a [growing consensus](https://www.bbc.co.uk/news/uk-51468919) that this may not be necessary, with new administrative data sets providing a more accurate picture of the UK's population.
 
 ```{r}
-
 ```
 
 ## Trade
@@ -46,5 +43,4 @@ UK trade data is collated by HM Revenue & Customs (HMRC) and published on the we
 Here's a worked example:
 
 ```{r}
-
 ```

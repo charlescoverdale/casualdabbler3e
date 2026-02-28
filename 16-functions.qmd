@@ -11,7 +11,6 @@ I recommend Hadley Wickham's great [chapter on functions](https://r4ds.hadley.nz
 A function in R is defined using the `function` keyword. Here is a simple function that adds two numbers:
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
 add_numbers <- function(a, b) {
   result <- a + b
   return(result)
@@ -19,7 +18,6 @@ add_numbers <- function(a, b) {
 
 # Using the function
 add_numbers(3, 5)
-
 ```
 
 In this example, we see a function consisting of:
@@ -32,7 +30,6 @@ In this example, we see a function consisting of:
 We can also reference functions (from other packages) for use in our own custom functions. This data cleaning functions references `dplyr`, `stringr,` and `tidyr`.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
 # Practical Example: Data Cleaning Function
 
 library(dplyr)
@@ -40,9 +37,11 @@ library(stringr)
 library(tidyr)
 
 data_cleaner <- function(df) {
-  df <- df %>% 
-    dplyr::mutate(across(where(is.character), 
-    stringr::str_trim)) %>% # Trim whitespace
+  df <- df %>%
+    dplyr::mutate(across(
+      where(is.character),
+      stringr::str_trim
+    )) %>% # Trim whitespace
     tidyr::drop_na() # Remove missing values
   return(df)
 }
@@ -50,7 +49,6 @@ data_cleaner <- function(df) {
 # Example
 df <- data.frame(name = c("Alice    ", " Bob", NA), age = c(25, 30, 22))
 data_cleaner(df)
-
 ```
 
 ## Luhn example
@@ -67,11 +65,10 @@ It follows these steps:
 That's a lot of info... instead let's write a function to check if a credit card number is valid:
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
 validate_credit_card <- function(card_number) {
   digits <- as.numeric(strsplit(as.character(card_number), "")[[1]])
   n <- length(digits)
-  
+
   # Double every second digit from the right
   for (i in seq(n - 1, 1, by = -2)) {
     digits[i] <- digits[i] * 2
@@ -79,7 +76,7 @@ validate_credit_card <- function(card_number) {
       digits[i] <- digits[i] - 9
     }
   }
-  
+
   # Check if the sum is a multiple of 10
   return(sum(digits) %% 10 == 0)
 }
@@ -87,7 +84,6 @@ validate_credit_card <- function(card_number) {
 # Example usage
 validate_credit_card(4532015112830366) # Should return TRUE
 validate_credit_card(1234567812345678) # Should return FALSE
-
 ```
 
 ## Loops in functions
@@ -99,7 +95,6 @@ A *factorial* is a mathematical operation denoted by an exclamation mark (!), us
 Let's write a looping function to calculate 10! (10x9x8x7x6x5x4x3x2x1)
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
 ## Calculating Factorial Using a Loop
 
 factorial_loop <- function(n) {

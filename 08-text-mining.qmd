@@ -7,7 +7,6 @@ This chapter outlines the process for inputting text data, and running some simp
 First up, let's load some packages.
 
 ```{r, warning=FALSE,message=FALSE}
-
 library(ggplot2)
 library(dplyr)
 library(tidyverse)
@@ -42,10 +41,9 @@ bible_tidy <- bible_df %>%
 # Find and display the most common words
 common_words <- bible_tidy %>%
   count(word, sort = TRUE) %>%
-  head(20)  # Show the top 20 words
+  head(20) # Show the top 20 words
 
 print(common_words)
-
 ```
 
 Somewhat unsurprisingly - "lord" wins it by a country mile.
@@ -59,11 +57,10 @@ In the `tidytext` package are lexicons which include the general sentiment of wo
 Let's see the count of words most associated with 'joy' in the bible.
 
 ```{r, warning=FALSE,message=FALSE}
-
 # Tokenize words
 bible_tidy <- bible_df %>%
   unnest_tokens(word, text) %>%
-  mutate(word = tolower(word))  # Ensure lowercase matching
+  mutate(word = tolower(word)) # Ensure lowercase matching
 
 # Get NRC lexicon & filter for "joy"
 nrcjoy <- tidytext::get_sentiments("nrc") %>%
@@ -76,5 +73,4 @@ bible_joy_words <- bible_tidy %>%
 
 # View top joyful words
 print(bible_joy_words)
-
 ```

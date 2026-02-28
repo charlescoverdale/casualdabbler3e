@@ -7,52 +7,47 @@ Sure we can build a confidence interval (as we learned in the previous chapter) 
 That's where we need to build models. Let's load in some packages.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
 # Load in required packages
-library(tidyverse)   # Includes ggplot2, dplyr, purrr, stringr, etc.
-library(ggridges)    # For ridge plots
-library(forecast)    # Time series forecasting
-library(ggrepel)     # For better text label placement
-library(viridis)     # Color scales
-library(readxl)      # Excel file reading
-library(lubridate)   # Date and time manipulation
-library(gapminder)   # Gapminder data for examples
-library(ggalt)       # Additional ggplot2 geoms
-library(scales)      # Scale functions for ggplot2
-library(readrba)     # Get aus econ data  
+library(tidyverse) # Includes ggplot2, dplyr, purrr, stringr, etc.
+library(ggridges) # For ridge plots
+library(forecast) # Time series forecasting
+library(ggrepel) # For better text label placement
+library(viridis) # Color scales
+library(readxl) # Excel file reading
+library(lubridate) # Date and time manipulation
+library(gapminder) # Gapminder data for examples
+library(ggalt) # Additional ggplot2 geoms
+library(scales) # Scale functions for ggplot2
+library(readrba) # Get aus econ data
 ```
 
 We'll start with some pre-loaded time series data. The `ggplot2` package includes a data set called 'economics' that contains US economic indicators from the 1960's to 2015.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
 econ_data <- economics %>% dplyr::select(c("date", "uempmed"))
-econ_data <- econ_data %>% dplyr::filter((date >= as.Date("1970-01-01") 
-                                          & date <= as.Date("1999-12-31")))
+econ_data <- econ_data %>% dplyr::filter((date >= as.Date("1970-01-01") &
+  date <= as.Date("1999-12-31")))
 ```
 
 As a side note: We can also get Australian unemployment rate data using the `readrba` function.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
-aus_unemp_rate <- readrba::read_rba(series_id = "GLFSURSA") 
+aus_unemp_rate <- readrba::read_rba(series_id = "GLFSURSA")
 head(aus_unemp_rate)
-
 ```
 
 Let's plot the US data to see what we are working with.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
 ggplot(econ_data) +
   geom_point(aes(x = date, y = uempmed), col = "grey", alpha = 0.5) +
   geom_smooth(aes(x = date, y = uempmed), col = "blue") +
-  
-  labs(title = "Unemployment rate",
-       caption = "Data: ggplot2::economics",
-       x = "",
-       y = "") +
-  
+  labs(
+    title = "Unemployment rate",
+    caption = "Data: ggplot2::economics",
+    x = "",
+    y = ""
+  ) +
   theme_minimal() +
   theme(
     plot.title = element_text(face = "bold", size = 12, margin = ggplot2::margin(0, 0, 25, 0)),
@@ -67,8 +62,6 @@ ggplot(econ_data) +
     panel.grid.major.x = element_blank(),
     legend.position = "bottom"
   )
-
-
 ```
 
 ## ARIMA
@@ -80,7 +73,6 @@ When working with ARIMAs, we need to 'difference' our series to make it stationa
 We check if it is stationary using the augmented Dickey-Fuller test. The null hypothesis assumes that the series is non-stationary. A series is said to be stationary when its mean, variance, and autocovariance don't change much over time.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
 # Test for stationarity
 aTSA::adf.test(econ_data$uempmed)
 
@@ -97,14 +89,12 @@ econ_data <- econ_data %>% mutate(diff = uempmed - lag(uempmed))
 ggplot(econ_data, aes(x = date, y = diff)) +
   geom_point(col = "grey", alpha = 0.5) +
   geom_smooth(col = "blue") +
-  
   labs(
     title = "1st Difference (Unemployment Rate)",
     caption = "Data: ggplot2::economics",
     x = "",
     y = ""
   ) +
-  
   theme_minimal() +
   theme(
     legend.position = "bottom",
@@ -119,13 +109,9 @@ ggplot(econ_data, aes(x = date, y = diff)) +
     panel.grid.minor = element_blank(),
     panel.grid.major.x = element_blank()
   )
-
-
-
 ```
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
 # Fit an ARIMA model
 ARIMA_model <- forecast::auto.arima(econ_data$uempmed)
 
@@ -147,10 +133,8 @@ There probably isn't a hotter term this decade than 'machine learning'. But the 
 The modern standard for machine learning in R is `tidymodels` — a collection of packages that gives you a clean, consistent way to build, train, and evaluate models. It's replaced the older `caret` package and is now the go-to approach for most R users doing ML work.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
 library(tidymodels)
-library(ranger)  # Fast random forest engine
-
+library(ranger) # Fast random forest engine
 ```
 
 ## Linear regression with tidymodels
@@ -160,14 +144,13 @@ We know that a model is just any function (of one or more variables) that helps 
 The nice thing about `tidymodels` is that every model follows the same pattern: define the model spec, bundle it into a workflow, fit it, then evaluate. Once you've learned it once, swapping between model types is trivial.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
 data(mtcars)
 
 # Split into training (80%) and testing (20%) sets
 set.seed(123)
 mtcars_split <- initial_split(mtcars, prop = 0.8)
 mtcars_train <- training(mtcars_split)
-mtcars_test  <- testing(mtcars_split)
+mtcars_test <- testing(mtcars_split)
 
 # Define a linear regression model
 lm_spec <- linear_reg() %>%
@@ -180,13 +163,11 @@ lm_workflow <- workflow() %>%
 
 # Fit on training data
 lm_fit <- lm_workflow %>% fit(data = mtcars_train)
-
 ```
 
 We can visualise how well the model fits by plotting predicted vs actual values.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
 # Generate predictions on test set
 lm_preds <- predict(lm_fit, mtcars_test) %>% bind_cols(mtcars_test)
 
@@ -194,7 +175,8 @@ ggplot(lm_preds, aes(x = hp)) +
   geom_point(aes(y = mpg), colour = "blue", alpha = 0.6) +
   geom_line(aes(y = .pred), colour = "blue") +
   geom_segment(aes(y = mpg, yend = .pred, xend = hp),
-               colour = "black", alpha = 0.5, linetype = "dotted") +
+    colour = "black", alpha = 0.5, linetype = "dotted"
+  ) +
   labs(
     title = "Linear Regression: Horsepower vs Fuel Efficiency",
     subtitle = "Higher horsepower cars get fewer miles per gallon",
@@ -208,15 +190,12 @@ ggplot(lm_preds, aes(x = hp)) +
     plot.subtitle = element_text(size = 11, margin = ggplot2::margin(b = 25)),
     panel.grid.minor = element_blank()
   )
-
 ```
 
 To put a number on how well the model performed, `yardstick` (part of `tidymodels`) gives us RMSE, MAE, and R² in a single call — no manual calculations needed.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
 metrics(lm_preds, truth = mpg, estimate = .pred)
-
 ```
 
 ## Random forest
@@ -226,7 +205,6 @@ True machine learning takes this further by building *many* models across *many*
 We'll use the `Boston` housing dataset to predict median home values (`medv`) from neighbourhood characteristics.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
 # Load Boston dataset
 data("Boston", package = "MASS")
 
@@ -234,14 +212,12 @@ data("Boston", package = "MASS")
 set.seed(123)
 boston_split <- initial_split(Boston, prop = 0.8)
 boston_train <- training(boston_split)
-boston_test  <- testing(boston_split)
-
+boston_test <- testing(boston_split)
 ```
 
 We define a random forest model using `rand_forest()` with the `ranger` engine — a fast, modern implementation.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
 # Define random forest model
 rf_spec <- rand_forest(trees = 500) %>%
   set_engine("ranger") %>%
@@ -254,19 +230,16 @@ rf_workflow <- workflow() %>%
 
 # Fit on training data
 rf_fit <- rf_workflow %>% fit(data = boston_train)
-
 ```
 
 Now evaluate performance on the held-out test set.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
 # Generate predictions
 rf_preds <- predict(rf_fit, boston_test) %>% bind_cols(boston_test)
 
 # Evaluate
 metrics(rf_preds, truth = medv, estimate = .pred)
-
 ```
 
 ## Comparing models
@@ -274,7 +247,6 @@ metrics(rf_preds, truth = medv, estimate = .pred)
 One of the best things about `tidymodels` is how easy it is to swap models in and out. Here we run a plain linear regression on the same Boston data and compare RMSE directly — same workflow, different model spec.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
 # Linear regression on Boston data
 lm_boston_spec <- linear_reg() %>% set_engine("lm")
 
@@ -286,12 +258,11 @@ lm_boston_fit <- workflow() %>%
 lm_boston_preds <- predict(lm_boston_fit, boston_test) %>% bind_cols(boston_test)
 
 # Compare RMSE
-rf_rmse  <- rmse(rf_preds,       truth = medv, estimate = .pred)$.estimate
-lm_rmse  <- rmse(lm_boston_preds, truth = medv, estimate = .pred)$.estimate
+rf_rmse <- rmse(rf_preds, truth = medv, estimate = .pred)$.estimate
+lm_rmse <- rmse(lm_boston_preds, truth = medv, estimate = .pred)$.estimate
 
 cat("Random forest RMSE:", round(rf_rmse, 2), "\n")
 cat("Linear regression RMSE:", round(lm_rmse, 2), "\n")
-
 ```
 
 The random forest will typically outperform linear regression on this dataset — it captures non-linear relationships between neighbourhood characteristics and home values that a straight line cannot.

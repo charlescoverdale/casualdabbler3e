@@ -9,10 +9,4 @@ Causal inference the process of determining cause-and-effect relationships. Simp
 The best book on this topic is [Causal Inference: The Mixtape](https://mixtape.scunning.com/) by the phenomenally talented Scott Cunningham.
 
 ```{r}
-
-
-
-
-
-
 ```

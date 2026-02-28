@@ -7,27 +7,25 @@ The nice thing about gridded data is that all the cells in the grid are the same
 Let's get started. First up we need to load some spatial and data crunching packages.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
 # Core tidyverse packages (includes ggplot2, dplyr, tidyr, broom, etc.)
 library(tidyverse)
 
 # Spatial data handling
-library(sf)         # Modern replacement for sp + rgdal
-library(raster)     # Working with raster data
-library(ncdf4)      # NetCDF file handling
-library(leaflet)    # Interactive maps
+library(sf) # Modern replacement for sp + rgdal
+library(raster) # Working with raster data
+library(ncdf4) # NetCDF file handling
+library(leaflet) # Interactive maps
 
 # Mapping & Visualization
-library(ggspatial)  # Adds scale bars, north arrows, etc.
-#library(tmap)       # Thematic mapping
-library(ggmap)      # Google Maps integration
-library(rasterVis)  # Raster visualization
-library(viridis)    # Color scales for ggplot2 and rasterVis
+library(ggspatial) # Adds scale bars, north arrows, etc.
+# library(tmap)       # Thematic mapping
+library(ggmap) # Google Maps integration
+library(rasterVis) # Raster visualization
+library(viridis) # Color scales for ggplot2 and rasterVis
 library(RColorBrewer) # Color palettes
 
 # Other Utilities
-library(strayr)      # ABS map data (runapp-aus/strayr)
-
+library(strayr) # ABS map data (runapp-aus/strayr)
 ```
 
 ## Import raster
@@ -47,8 +45,7 @@ The easiest way to do this is using the `strayr` package, which pulls official A
 ```{r,results='hide', warning=FALSE,message=FALSE}
 # Import a polygon for the state of Queensland
 QLD_shape <- strayr::read_absmap("state2016") %>%
-             filter(state_name_2016 == "Queensland")
-
+  filter(state_name_2016 == "Queensland")
 ```
 
 ## Choosing geographies
@@ -56,44 +53,42 @@ QLD_shape <- strayr::read_absmap("state2016") %>%
 We have raster data for the entirety of Australia (and then some as it's pulled from one of the BOMs satellites). This is a bit messy to work with - so let's crop the rainfall data from the entire Australian continent to just Queensland.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
-#Crop data
-r2 <- crop(rainfall,extent(QLD_shape))
-r3 <- mask(r2,QLD_shape)
+# Crop data
+r2 <- crop(rainfall, extent(QLD_shape))
+r3 <- mask(r2, QLD_shape)
 plot(r3)
-
 ```
 
 ]Next up, let's transform the cropped raster into a data frame that we can use in the ggplot package.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
-r3_df <- as.data.frame(r3,xy=TRUE)
+r3_df <- as.data.frame(r3, xy = TRUE)
 
 r3_df <- r3_df %>%
-         filter(rainan!="NA")
+  filter(rainan != "NA")
 
-ggplot() +  
-  geom_tile(data=r3_df, aes(x=x, y=y, fill=rainan)) + 
+ggplot() +
+  geom_tile(data = r3_df, aes(x = x, y = y, fill = rainan)) +
   scale_fill_viridis() +
   coord_equal() +
-  theme(legend.position="bottom") +
-  theme(legend.key.width=unit(1.2, "cm"))+
-  labs(title="Rainfall in QLD",
-               subtitle = "Analysis from the Bureau of Meterology",
-               caption = "Data: BOM 2021",
-               x="",
-               y="",
-               fill="(mm)") + 
+  theme(legend.position = "bottom") +
+  theme(legend.key.width = unit(1.2, "cm")) +
+  labs(
+    title = "Rainfall in QLD",
+    subtitle = "Analysis from the Bureau of Meterology",
+    caption = "Data: BOM 2021",
+    x = "",
+    y = "",
+    fill = "(mm)"
+  ) +
   theme_minimal() +
-            theme(axis.ticks.x = element_blank(),axis.text.x = element_blank())+
-            theme(axis.ticks.y = element_blank(),axis.text.y = element_blank())+
-            theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-            #theme(legend.position = "bottom")+
-            theme(plot.title=element_text(face="bold",size=12))+
-            theme(plot.subtitle=element_text(size=11))+
-            theme(plot.caption=element_text(size=8))
-
+  theme(axis.ticks.x = element_blank(), axis.text.x = element_blank()) +
+  theme(axis.ticks.y = element_blank(), axis.text.y = element_blank()) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  # theme(legend.position = "bottom")+
+  theme(plot.title = element_text(face = "bold", size = 12)) +
+  theme(plot.subtitle = element_text(size = 11)) +
+  theme(plot.caption = element_text(size = 8))
 ```
 
 \
@@ -104,22 +99,22 @@ Excellent, we've got a working map of rainfall in Queensland using the ggplot pa
 For our first piece of data analysis, we're going to look at areas with less than 600mm of annual rainfall. How many of our data points will have less than 600mm of rain? Let's take a look at the data distribution and find out.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
 ggplot(r3_df) +
-    geom_histogram(aes(rainan),binwidth=1,col="darkblue")+
-    labs(title="Distribution of annual rainfall in QLD",
-               subtitle = "Data using a 5x5km grid",
-               caption = "Data: Bureau of Meterology 2021",
-               x="Rainfall (mm)",
-               y="",
-               fill="(mm)") + 
+  geom_histogram(aes(rainan), binwidth = 1, col = "darkblue") +
+  labs(
+    title = "Distribution of annual rainfall in QLD",
+    subtitle = "Data using a 5x5km grid",
+    caption = "Data: Bureau of Meterology 2021",
+    x = "Rainfall (mm)",
+    y = "",
+    fill = "(mm)"
+  ) +
   theme_minimal() +
-            theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-            theme(legend.position = "none")+
-            theme(plot.title=element_text(face="bold",size=12))+
-            theme(plot.subtitle=element_text(size=11))+
-            theme(plot.caption=element_text(size=8))
-
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(face = "bold", size = 12)) +
+  theme(plot.subtitle = element_text(size = 11)) +
+  theme(plot.caption = element_text(size = 8))
 ```
 
 Interesting. The data is heavily right tailed skewed (the mean will be much higher than the median)... and most of the data looks to be between 0-1000mm (this makes sense).
@@ -127,7 +122,6 @@ Interesting. The data is heavily right tailed skewed (the mean will be much high
 Let's create a 'flag' column of 0's and 1's that shows when a data point is less than 600mm.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
 # Define flag column and colors
 r3_df <- r3_df %>%
   mutate(flag_600mm = as.factor(ifelse(rainan <= 600, 1, 0)))
@@ -135,8 +129,8 @@ r3_df <- r3_df %>%
 flag_colours <- c("grey", "#2FB300")
 
 # Plot
-ggplot(r3_df, aes(x = x, y = y, fill = flag_600mm)) +  
-  geom_tile() + 
+ggplot(r3_df, aes(x = x, y = y, fill = flag_600mm)) +
+  geom_tile() +
   scale_fill_manual(values = flag_colours) +
   coord_equal() +
   theme_minimal() +
@@ -157,7 +151,6 @@ ggplot(r3_df, aes(x = x, y = y, fill = flag_600mm)) +
     plot.subtitle = element_text(size = 11),
     plot.caption = element_text(size = 8)
   )
-
 ```
 
 ## Making an interactive map
@@ -165,12 +158,10 @@ ggplot(r3_df, aes(x = x, y = y, fill = flag_600mm)) +
 The static map above is good... but an interactive visual (ideally with place names below) is better. The `leaflet` package is exceptional here.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
 # This code creates an interactive leaflet map. It is commented out to allow the html version of RCCD2e to render online.
 
 # leaflet() %>%
 #   addTiles() %>%
 #   addRasterImage(r5, opacity = 0.5) %>%
 #   addLegend(pal = colorNumeric("viridis", values(r5)), values = values(r5))
-
 ```

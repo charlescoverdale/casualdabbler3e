@@ -11,10 +11,9 @@ The notes and code loosely follow the fabulous data tutorial by Grant R. McDermo
 First up, let's load some packages.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
 # Install development version of rvest if necessary
-if (numeric_version(packageVersion("rvest")) < numeric_version('0.99.0')) {
-  remotes::install_github('tidyverse/rvest')
+if (numeric_version(packageVersion("rvest")) < numeric_version("0.99.0")) {
+  remotes::install_github("tidyverse/rvest")
 }
 
 # Load and install the packages that we'll be using today
@@ -41,11 +40,10 @@ Let's use this [wikipedia page](https://en.wikipedia.org/wiki/Men%27s_100_metres
 We can start by pulling all the data from the webpage.
 
 ```{r, warning=FALSE,message=FALSE}
-
-m100 <- rvest:: read_html(
-               "http://en.wikipedia.org/wiki/Men%27s_100_metres_world_record_progression") 
+m100 <- rvest::read_html(
+  "http://en.wikipedia.org/wiki/Men%27s_100_metres_world_record_progression"
+)
 m100
-
 ```
 
 ...and we get a whole heap of mumbo jumbo.
@@ -55,24 +53,21 @@ To get the table of 'Unofficial progression before the IAAF' we're going to have
 Using the SelectGadget tool we can click around and identify that that specific table.
 
 ```{r, warning=FALSE,message=FALSE}
-
-pre_iaaf = 
+pre_iaaf <-
   m100 %>%
   html_element("div+ .wikitable :nth-child(1)") %>% ## select table element
-  html_table()                                      ## convert to data frame
+  html_table() ## convert to data frame
 
 pre_iaaf
-
 ```
 
 Niiiiice - now that's better. Let's do some quick data cleaning.
 
 ```{r,warning=FALSE,message=FALSE}
-
 pre_iaaf <- pre_iaaf %>%
-            clean_names() %>%
-            mutate(date = mdy(date))
-  
+  clean_names() %>%
+  mutate(date = mdy(date))
+
 pre_iaaf
 ```
 
@@ -81,12 +76,11 @@ Let's also scrape the data for the more recent running records. That's the table
 For the second table:
 
 ```{r,warning=FALSE,message=FALSE}
-
-iaaf_76 = m100 %>%
+iaaf_76 <- m100 %>%
   html_element("#mw-content-text > div > table:nth-child(17)") %>%
   html_table()
 
-iaaf_76 <-iaaf_76 %>%
+iaaf_76 <- iaaf_76 %>%
   clean_names() %>%
   mutate(date = mdy(date))
 
@@ -96,54 +90,46 @@ iaaf_76
 And now for the third table:
 
 ```{r,warning=FALSE,message=FALSE}
-
 iaaf <- m100 %>%
-        html_element("#mw-content-text > div.mw-parser-output > table:nth-child(23)") %>%
-        html_table() %>%
-        clean_names() %>%
-        mutate(date = mdy(date))
+  html_element("#mw-content-text > div.mw-parser-output > table:nth-child(23)") %>%
+  html_table() %>%
+  clean_names() %>%
+  mutate(date = mdy(date))
 iaaf
 ```
 
 How good. Now let's bind the rows together to make a master data set.
 
 ```{r,warning=FALSE,message=FALSE}
-
 wr100 <- rbind(
-    pre_iaaf %>% dplyr::select(time, athlete, nationality, date) %>% 
+  pre_iaaf %>% dplyr::select(time, athlete, nationality, date) %>%
     mutate(era = "Pre-IAAF"),
-    iaaf_76 %>% dplyr::select(time, athlete, nationality, date) %>% 
+  iaaf_76 %>% dplyr::select(time, athlete, nationality, date) %>%
     mutate(era = "Pre-automatic"),
-    iaaf %>% dplyr::select(time, athlete, nationality, date) %>% 
+  iaaf %>% dplyr::select(time, athlete, nationality, date) %>%
     mutate(era = "Modern")
-    )
+)
 
 wr100
-
 ```
 
 Excellent. Let's plot the results.
 
 ```{r,warning=FALSE,message=FALSE}
-
 ggplot(wr100) +
   geom_point(aes(x = date, y = time, col = era), alpha = 0.7) +
-  
   labs(
     title = "Men's 100m World Record Progression",
     subtitle = "Analysing how times have improved over the past 130 years",
     caption = "Data: Wikipedia 2025",
     x = "",
     y = ""
-  ) + 
-  
+  ) +
   theme_minimal() +
-  
   scale_y_continuous(limits = c(9.5, 11), breaks = c(9.5, 10, 10.5, 11)) +
-  
   theme(
     axis.text.y = element_text(vjust = -0.5, margin = ggplot2::margin(l = 20, r = -20)),
-    plot.subtitle = element_text(margin = ggplot2::margin(0, 0, 25, 0),size=11),
+    plot.subtitle = element_text(margin = ggplot2::margin(0, 0, 25, 0), size = 11),
     legend.title = element_blank(),
     plot.title = element_text(face = "bold", size = 12),
     plot.caption = element_text(size = 8),
@@ -153,5 +139,4 @@ ggplot(wr100) +
     axis.line.x = element_line(colour = "black", size = 0.4),
     axis.ticks.x = element_line(colour = "black", size = 0.4)
   )
-
 ```

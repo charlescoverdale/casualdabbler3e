@@ -32,6 +32,9 @@ book:
       - icon: github
         href: https://github.com/charlescoverdale/casualdabbler3e
 
+execute:
+  cache: true
+
 format:
   html:
     theme: cosmo

@@ -11,12 +11,11 @@ One word of warning: I use the term electorates, divisions, and seats interchang
 Let's start by loading up some packages
 
 ```{r, warning=FALSE,message=FALSE}
-
-library(ggparliament)  # If working with parliamentary data
-library(tidyverse)      # Includes dplyr, ggplot2, tidyr, purrr, and more
+library(ggparliament) # If working with parliamentary data
+library(tidyverse) # Includes dplyr, ggplot2, tidyr, purrr, and more
 library(ggthemes)
-library(readxl)         # Reading Excel files
-library(sf)             # Spatial data handling
+library(readxl) # Reading Excel files
+library(sf) # Spatial data handling
 library(DT)
 library(eechidna)
 library(absmapsdata)
@@ -33,7 +32,6 @@ Some phenomenal Australian economists and statisticians have put together a hand
 They've also gone to the trouble of aggregating some census data to the electorate level. This can be found with the **abs2022** function.
 
 ```{r, warning=FALSE,message=FALSE}
-
 data(fp22)
 data(tpp22)
 data(tcp22)
@@ -75,42 +73,45 @@ Durack in Western Australia (1.63 million square kilometres) is by far the large
 Let's make a map to make things easier.
 
 ```{r,figures-side1, fig.show="hold", out.width="50%",results='hide', warning=FALSE,message=FALSE}
-
 CED_map <- absmapsdata::ced2021 %>%
-           ggplot()+
-           geom_sf()+
-           labs(title="Electoral divisions in Australia",
-               subtitle = "It turns out we divide the country in very non-standard blocks",
-               caption = "Data: Australian Bureau of Statistics 2016",
-               x="",
-               y="") + 
-           theme_minimal() +
-            theme(axis.ticks.x = element_blank(),axis.text.x = element_blank())+
-            theme(axis.ticks.y = element_blank(),axis.text.y = element_blank())+
-            theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-            theme(legend.position = "right")+
-            theme(plot.title=element_text(face="bold",size=12))+
-            theme(plot.subtitle=element_text(size=11))+
-            theme(plot.caption=element_text(size=8))
+  ggplot() +
+  geom_sf() +
+  labs(
+    title = "Electoral divisions in Australia",
+    subtitle = "It turns out we divide the country in very non-standard blocks",
+    caption = "Data: Australian Bureau of Statistics 2016",
+    x = "",
+    y = ""
+  ) +
+  theme_minimal() +
+  theme(axis.ticks.x = element_blank(), axis.text.x = element_blank()) +
+  theme(axis.ticks.y = element_blank(), axis.text.y = element_blank()) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  theme(legend.position = "right") +
+  theme(plot.title = element_text(face = "bold", size = 12)) +
+  theme(plot.subtitle = element_text(size = 11)) +
+  theme(plot.caption = element_text(size = 8))
 
 
 CED_map_remove_6 <- ced2021 %>%
-                    dplyr::filter(!ced_code_2021 %in% c(506,701,404,511,321,317)) %>%   
-                    ggplot()+
-           geom_sf()+
-           labs(title="194 electoral divisions in Australia",
-               subtitle = "Turns out removing the largest 6 electorates makes a difference",
-               caption = "Data: Australian Bureau of Statistics 2016",
-               x="",
-               y="") + 
-           theme_minimal() +
-            theme(axis.ticks.x = element_blank(),axis.text.x = element_blank())+
-            theme(axis.ticks.y = element_blank(),axis.text.y = element_blank())+
-            theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-            theme(legend.position = "right")+
-            theme(plot.title=element_text(face="bold",size=12))+
-            theme(plot.subtitle=element_text(size=11))+
-            theme(plot.caption=element_text(size=8))
+  dplyr::filter(!ced_code_2021 %in% c(506, 701, 404, 511, 321, 317)) %>%
+  ggplot() +
+  geom_sf() +
+  labs(
+    title = "194 electoral divisions in Australia",
+    subtitle = "Turns out removing the largest 6 electorates makes a difference",
+    caption = "Data: Australian Bureau of Statistics 2016",
+    x = "",
+    y = ""
+  ) +
+  theme_minimal() +
+  theme(axis.ticks.x = element_blank(), axis.text.x = element_blank()) +
+  theme(axis.ticks.y = element_blank(), axis.text.y = element_blank()) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  theme(legend.position = "right") +
+  theme(plot.title = element_text(face = "bold", size = 12)) +
+  theme(plot.subtitle = element_text(size = 11)) +
+  theme(plot.caption = element_text(size = 8))
 
 CED_map
 CED_map_remove_6
@@ -125,24 +126,24 @@ We see the data in our DivisionNm variable is in UPPERCASE while our ced_name_20
 We can then then join the two dataframes using the left_join function.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
-#Pull in the electorate shapefiles from the absmapsdata package
+# Pull in the electorate shapefiles from the absmapsdata package
 electorates <- ced2021
 
-#Make the DivisionNm Titlecase
-tcp22$DivisionNm=str_to_title(tcp22$DivisionNm)
+# Make the DivisionNm Titlecase
+tcp22$DivisionNm <- str_to_title(tcp22$DivisionNm)
 
-tcp22_edit <- tcp22 %>% distinct() %>% filter(Elected == "Y")
+tcp22_edit <- tcp22 %>%
+  distinct() %>%
+  filter(Elected == "Y")
 
-#Make the column names the same
+# Make the column names the same
 electorates <- dplyr::rename(electorates, DivisionNm = ced_name_2021)
 
 ced_map_data <- left_join(tcp22_edit, electorates, by = "DivisionNm")
 
 ced_map_data <- as.data.frame(ced_map_data)
 
-head(ced_map_data, n=151)
-
+head(ced_map_data, n = 151)
 ```
 
 ## Analysis
@@ -152,27 +153,25 @@ Let's start by answering a simple question: who won the election? For this we'll
 Note in the table above, the PartyNm variable is a mess. Some candidates noted their party by it's abbreviation rather than full name, others put in a state specific prefix For this analysis, the PartyAb variable is cleaner to use.
 
 ```{r, warning=FALSE,message=FALSE}
-who_won <- tcp22 %>% 
-  filter(Elected == "Y") %>% 
-  group_by(PartyAb) %>% 
-  tally() %>% 
-  arrange(desc(n)) 
+who_won <- tcp22 %>%
+  filter(Elected == "Y") %>%
+  group_by(PartyAb) %>%
+  tally() %>%
+  arrange(desc(n))
 
-head(who_won, n=10)
+head(who_won, n = 10)
 ```
 
 Next up let's see which candidates won with the smallest percentage of first preference votes. Australia's preferential voting system normally makes these numbers quite interesting.
 
 ```{r,warning=FALSE,message=FALSE}
-
-who_won_least_votes_prop <- fp22 %>% 
-  filter(Elected == "Y") %>% 
-  arrange(Percent) %>% 
-  mutate(candidate_full_name = paste0(GivenNm, " ", Surname, " (", CandidateID, ")")) %>% 
+who_won_least_votes_prop <- fp22 %>%
+  filter(Elected == "Y") %>%
+  arrange(Percent) %>%
+  mutate(candidate_full_name = paste0(GivenNm, " ", Surname, " (", CandidateID, ")")) %>%
   dplyr::select(candidate_full_name, PartyNm, DivisionNm, Percent)
 
-head(who_won_least_votes_prop,n=10)
-
+head(who_won_least_votes_prop, n = 10)
 ```
 
 This is really something.
@@ -182,13 +181,13 @@ The relationship we're seeing here seems to be these are *many* the seats that a
 The electorate I grew up in is listed here (Richmond) - let's look at how the votes were allocated.
 
 ```{r, warning=FALSE,message=FALSE}
-Richmond_fp <- fp22 %>% 
-  filter(DivisionNm == "RICHMOND") %>% 
-  arrange(-Percent) %>% 
-  mutate(candidate_full_name = paste0(GivenNm, " ", Surname, " (", CandidateID, ")")) %>% 
+Richmond_fp <- fp22 %>%
+  filter(DivisionNm == "RICHMOND") %>%
+  arrange(-Percent) %>%
+  mutate(candidate_full_name = paste0(GivenNm, " ", Surname, " (", CandidateID, ")")) %>%
   dplyr::select(candidate_full_name, PartyNm, DivisionNm, Percent, OrdinaryVotes)
 
-head(Richmond_fp,n=10)
+head(Richmond_fp, n = 10)
 ```
 
 Sure enough - the Greens certainly helped get the ALP across the line.
@@ -198,15 +197,14 @@ The interpretation that these seats are the 'most marginal' is incorrect under a
 But - let's investigate which seats are the most marginal.
 
 ```{r,warning=FALSE,message=FALSE}
-
-who_won_smallest_margin <- tcp22 %>% 
-  filter(Elected == "Y") %>% 
-  mutate(percent_margin = 2*(Percent - 50), vote_margin = round(percent_margin * OrdinaryVotes / Percent)) %>% 
-  arrange(Percent) %>% 
-  mutate(candidate_full_name = paste0(GivenNm, " ", Surname, " (", CandidateID, ")")) %>% 
+who_won_smallest_margin <- tcp22 %>%
+  filter(Elected == "Y") %>%
+  mutate(percent_margin = 2 * (Percent - 50), vote_margin = round(percent_margin * OrdinaryVotes / Percent)) %>%
+  arrange(Percent) %>%
+  mutate(candidate_full_name = paste0(GivenNm, " ", Surname, " (", CandidateID, ")")) %>%
   dplyr::select(candidate_full_name, PartyNm, DivisionNm, Percent, OrdinaryVotes, percent_margin, vote_margin)
 
-head(who_won_smallest_margin, n=20)
+head(who_won_smallest_margin, n = 20)
 ```
 
 Crikey. We see Fiona Phillips in Gilmore got in with a 0.17% margin (just 380 votes!)
@@ -214,15 +212,14 @@ Crikey. We see Fiona Phillips in Gilmore got in with a 0.17% margin (just 380 vo
 While we're at it, we better do the opposite and see who romped it in by the largest margin.
 
 ```{r,warning=FALSE,message=FALSE}
-
-who_won_largest_margin <- tcp22 %>% 
-  filter(Elected == "Y") %>% 
-  mutate(percent_margin = 2*(Percent - 50), vote_margin = round(percent_margin * OrdinaryVotes / Percent)) %>% 
-  arrange(desc(Percent)) %>% 
-  mutate(candidate_full_name = paste0(GivenNm, " ", Surname, " (", CandidateID, ")")) %>% 
+who_won_largest_margin <- tcp22 %>%
+  filter(Elected == "Y") %>%
+  mutate(percent_margin = 2 * (Percent - 50), vote_margin = round(percent_margin * OrdinaryVotes / Percent)) %>%
+  arrange(desc(Percent)) %>%
+  mutate(candidate_full_name = paste0(GivenNm, " ", Surname, " (", CandidateID, ")")) %>%
   dplyr::select(candidate_full_name, PartyNm, DivisionNm, Percent, OrdinaryVotes, percent_margin, vote_margin)
 
- head(who_won_largest_margin, n=20)
+head(who_won_largest_margin, n = 20)
 ```
 
 Wowza. That's really something. Some candidates won seats with a 40-45 percent margin - scooping up 70% of the two candidate preferred vote in the process!
@@ -230,15 +227,15 @@ Wowza. That's really something. Some candidates won seats with a 40-45 percent m
 We can also cut the seats by state for a look at where the 'strongholds' are across the country.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-who_won <- tcp22 %>% 
-  filter(Elected == "Y") %>% 
-  group_by(PartyAb, StateAb) %>% 
-  tally() %>% 
-  arrange(desc(n)) 
+who_won <- tcp22 %>%
+  filter(Elected == "Y") %>%
+  group_by(PartyAb, StateAb) %>%
+  tally() %>%
+  arrange(desc(n))
 
-who_won_by_state <- spread(who_won,StateAb, n) %>% arrange(desc(NSW))
+who_won_by_state <- spread(who_won, StateAb, n) %>% arrange(desc(NSW))
 
-head(who_won_by_state, n=10)
+head(who_won_by_state, n = 10)
 ```
 
 ## Trends
@@ -246,7 +243,6 @@ head(who_won_by_state, n=10)
 Now we've figured out how to work with election data - let's link it up to some AUstralian demographic data. The eechidna package includes a cleaned set of census data from 2022 that has already been adjusted from ASGS boundaries to Commonwealth Electoral Divisions.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
 # Import the census data from the eechidna package
 data(eechidna::abs2021)
 head(abs2021)
@@ -261,29 +257,27 @@ That's what we want to see. 151 rows of data (one for each electorate) and over 
 A starting exploratory exercise is too see which of these variables are correlated with voting for one party or another. There's some old narrative around LNP voters being rich, old, white, and somehow 'upper class' compared to the population at large. Let's pick a few variables that roughly match with this criteria (Income, Age, English language speakers, and Bachelor educated) and chart it compared to LNP percentage of the vote.
 
 ```{r,figures-side2, fig.show="hold", out.width="50%",results='hide', warning=FALSE,message=FALSE}
-
 # See relationship between personal income and Liberal/National support
 
-ggplot(election2022, aes(x = MedianPersonalIncome, y = LNP_Percent)) + 
-  geom_point() + 
-  geom_smooth() + 
+ggplot(election2022, aes(x = MedianPersonalIncome, y = LNP_Percent)) +
+  geom_point() +
+  geom_smooth() +
   theme_minimal()
 
-ggplot(election2022, aes(x = MedianAge, y = LNP_Percent)) + 
-  geom_jitter() + 
-  geom_smooth() + 
+ggplot(election2022, aes(x = MedianAge, y = LNP_Percent)) +
+  geom_jitter() +
+  geom_smooth() +
   theme_minimal()
 
-ggplot(election2022, aes(x = EnglishOnly, y = LNP_Percent)) + 
-  geom_jitter() + 
-  geom_smooth() + 
+ggplot(election2022, aes(x = EnglishOnly, y = LNP_Percent)) +
+  geom_jitter() +
+  geom_smooth() +
   theme_minimal()
 
-ggplot(election2022, aes(x = BachelorAbv, y = LNP_Percent)) + 
-  geom_jitter() + 
-  geom_smooth() + 
+ggplot(election2022, aes(x = BachelorAbv, y = LNP_Percent)) +
+  geom_jitter() +
+  geom_smooth() +
   theme_minimal()
-
 ```
 
 First impressions: Geez this data looks messy.
@@ -293,68 +287,69 @@ Second impression: Maybe there's a bit of a trend with age and income?
 Let's build a regression model to run all the 80 odd census variables in the abs2022 data set against the LNP_percent variable.
 
 ```{r,warning=FALSE,message=FALSE}
-
 # We can use colnames(election2022) to get a big list of all the variables available
 
 # Now we build the model
-election_model <- lm(LNP_Percent~
-                    Population+
-                    Area+
-                    Age00_04+
-                    Age05_14+
-                    Age15_19+
-                    Age20_24+
-                    Age25_34+
-                    Age35_44+
-                    Age45_54+
-                    Age55_64+
-                    Age65_74+
-                    Age75_84+
-                    Age85plus+
-                    Anglican+
-                    AusCitizen+
-                    AverageHouseholdSize+
-                    BachelorAbv+Born_Asia+
-                    Born_MidEast+Born_SE_Europe+
-                    Born_UK+
-                    BornElsewhere+
-                    Buddhism+
-                    Catholic+
-                    Christianity+
-                    Couple_NoChild_House+Couple_WChild_House+
-                    CurrentlyStudying+DeFacto+
-                    DiffAddress+
-                    DipCert+
-                    EnglishOnly+
-                    FamilyRatio+
-                    Finance+
-                    HighSchool+
-                    Indigenous+
-                    InternetUse+
-                    Islam+
-                    Judaism+
-                    Laborer+
-                    LFParticipation+
-                    Married+
-                    MedianAge+
-                    MedianFamilyIncome+
-                    MedianHouseholdIncome+
-                    MedianLoanPay+
-                    MedianPersonalIncome+
-                    MedianRent+
-                    Mortgage+
-                    NoReligion+
-                    OneParent_House+
-                    Owned+
-                    Professional+
-                    PublicHousing+
-                    Renting+
-                    SocialServ+
-                    SP_House+
-                    Tradesperson+
-                    Unemployed+
-                    Volunteer,
-                    data=election2022)
+election_model <- lm(
+  LNP_Percent ~
+    Population +
+    Area +
+    Age00_04 +
+    Age05_14 +
+    Age15_19 +
+    Age20_24 +
+    Age25_34 +
+    Age35_44 +
+    Age45_54 +
+    Age55_64 +
+    Age65_74 +
+    Age75_84 +
+    Age85plus +
+    Anglican +
+    AusCitizen +
+    AverageHouseholdSize +
+    BachelorAbv + Born_Asia +
+    Born_MidEast + Born_SE_Europe +
+    Born_UK +
+    BornElsewhere +
+    Buddhism +
+    Catholic +
+    Christianity +
+    Couple_NoChild_House + Couple_WChild_House +
+    CurrentlyStudying + DeFacto +
+    DiffAddress +
+    DipCert +
+    EnglishOnly +
+    FamilyRatio +
+    Finance +
+    HighSchool +
+    Indigenous +
+    InternetUse +
+    Islam +
+    Judaism +
+    Laborer +
+    LFParticipation +
+    Married +
+    MedianAge +
+    MedianFamilyIncome +
+    MedianHouseholdIncome +
+    MedianLoanPay +
+    MedianPersonalIncome +
+    MedianRent +
+    Mortgage +
+    NoReligion +
+    OneParent_House +
+    Owned +
+    Professional +
+    PublicHousing +
+    Renting +
+    SocialServ +
+    SP_House +
+    Tradesperson +
+    Unemployed +
+    Volunteer,
+  data = election2022
+)
 
 summary(election_model)
 ```
@@ -364,9 +359,8 @@ For the people that care about statistical fit and endogenous variables, you may
 It's pretty rough. Let's run a basic check to see if the residuals are normally distributed.
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
-hist(election_model$residuals, col="bisque", freq=FALSE, main=NA)
-lines(density(election_model$residuals), col="red")
+hist(election_model$residuals, col = "bisque", freq = FALSE, main = NA)
+lines(density(election_model$residuals), col = "red")
 ```
 
 Hmm... that's actually not too bad. Onwards.
@@ -374,74 +368,73 @@ Hmm... that's actually not too bad. Onwards.
 We see now that only a handful of these variables in the table above are statistically significant. Running an updated (and leaner) model gives:
 
 ```{r,results='hide', warning=FALSE,message=FALSE}
-
-election_model_lean <- lm(LNP_Percent~
-                          BachelorAbv+
-                          CurrentlyStudying+
-                          DeFacto+
-                          DiffAddress+
-                          Finance+HighSchool+
-                          Indigenous+
-                          LFParticipation+
-                          Married+
-                          NoReligion,
-                          data=election2022)
+election_model_lean <- lm(
+  LNP_Percent ~
+    BachelorAbv +
+    CurrentlyStudying +
+    DeFacto +
+    DiffAddress +
+    Finance + HighSchool +
+    Indigenous +
+    LFParticipation +
+    Married +
+    NoReligion,
+  data = election2022
+)
 
 summary(election_model_lean)
 ```
 
 ```{r,figures-side3, fig.show="hold", out.width="50%",results='hide', warning=FALSE,message=FALSE}
-
-ggplot(election2022, aes(x = BachelorAbv, y = LNP_Percent)) + 
-  geom_point() + 
-  geom_smooth() + 
+ggplot(election2022, aes(x = BachelorAbv, y = LNP_Percent)) +
+  geom_point() +
+  geom_smooth() +
   theme_minimal()
 
-ggplot(election2022, aes(x = CurrentlyStudying, y = LNP_Percent)) + 
-  geom_jitter() + 
-  geom_smooth() + 
+ggplot(election2022, aes(x = CurrentlyStudying, y = LNP_Percent)) +
+  geom_jitter() +
+  geom_smooth() +
   theme_minimal()
 
-ggplot(election2022, aes(x = DeFacto, y = LNP_Percent)) + 
-  geom_jitter() + 
-  geom_smooth() + 
+ggplot(election2022, aes(x = DeFacto, y = LNP_Percent)) +
+  geom_jitter() +
+  geom_smooth() +
   theme_minimal()
 
-ggplot(election2022, aes(x = DiffAddress, y = LNP_Percent)) + 
-  geom_jitter() + 
-  geom_smooth() + 
+ggplot(election2022, aes(x = DiffAddress, y = LNP_Percent)) +
+  geom_jitter() +
+  geom_smooth() +
   theme_minimal()
 
-ggplot(election2022, aes(x = Finance, y = LNP_Percent)) + 
-  geom_jitter() + 
-  geom_smooth() + 
+ggplot(election2022, aes(x = Finance, y = LNP_Percent)) +
+  geom_jitter() +
+  geom_smooth() +
   theme_minimal()
 
-ggplot(election2022, aes(x = HighSchool, y = LNP_Percent)) + 
-  geom_jitter() + 
-  geom_smooth() + 
+ggplot(election2022, aes(x = HighSchool, y = LNP_Percent)) +
+  geom_jitter() +
+  geom_smooth() +
   theme_minimal()
 
-ggplot(election2022, aes(x = Indigenous, y = LNP_Percent)) + 
-  geom_jitter() + 
-  geom_smooth() + 
+ggplot(election2022, aes(x = Indigenous, y = LNP_Percent)) +
+  geom_jitter() +
+  geom_smooth() +
   theme_minimal()
 
-ggplot(election2022, aes(x = LFParticipation, y = LNP_Percent)) + 
-  geom_jitter() + 
-  geom_smooth() + 
+ggplot(election2022, aes(x = LFParticipation, y = LNP_Percent)) +
+  geom_jitter() +
+  geom_smooth() +
   theme_minimal()
 
-ggplot(election2022, aes(x = Married, y = LNP_Percent)) + 
-  geom_jitter() + 
-  geom_smooth() + 
+ggplot(election2022, aes(x = Married, y = LNP_Percent)) +
+  geom_jitter() +
+  geom_smooth() +
   theme_minimal()
 
-ggplot(election2022, aes(x = NoReligion, y = LNP_Percent)) + 
-  geom_jitter() + 
-  geom_smooth() + 
+ggplot(election2022, aes(x = NoReligion, y = LNP_Percent)) +
+  geom_jitter() +
+  geom_smooth() +
   theme_minimal()
-
 ```
 
 One of the more novel issues with the above analysis is that it's done on the electorate level, however electorates vary dramatically in side (google the Modifiable Area Unit Problem if this piques your interest)
@@ -453,29 +446,29 @@ Instead of using one data point for a whole electorate (regardless of how big it
 The AEC maintains a [handy spreadsheet](http://results.aec.gov.au/20499/Website/Downloads/GeneralPollingPlacesDownload-20499.csv) of booth locations for recent federal elections. You can search for your local booth location (probably a school, church, or community center) in the table below.
 
 ```{r message=FALSE, error = TRUE, warning=FALSE, echo=FALSE, tidy=TRUE}
-
 # Find the list of 2016 booth locations
 
-booths <- read_csv("http://results.aec.gov.au/20499/Website/Downloads/GeneralPollingPlacesDownload-20499.csv", skip=1)
+booths <- read_csv("http://results.aec.gov.au/20499/Website/Downloads/GeneralPollingPlacesDownload-20499.csv", skip = 1)
 
-head(booths, n=10)
+head(booths, n = 10)
 ```
 
 What do these booths look like on a map? Let's reuse the CED map above and plot a point for each booth location.
 
 ```{r fig.width=7, fig.height=4, message=FALSE, error = TRUE, warning=FALSE, echo=TRUE, tidy=TRUE}
-
 ggplot() +
   geom_sf(data = ced2021) +
-  geom_point(data = booths, aes(x = Longitude, y = Latitude), 
-             colour = "purple", size = 1, alpha = 0.3, inherit.aes = FALSE) +
+  geom_point(
+    data = booths, aes(x = Longitude, y = Latitude),
+    colour = "purple", size = 1, alpha = 0.3, inherit.aes = FALSE
+  ) +
   labs(
     title = "Polling booths in Australia",
     subtitle = " ",
     caption = "Data: Australian Electoral Commission 2016",
     x = "",
     y = ""
-  ) + 
+  ) +
   theme_minimal() +
   theme(
     axis.ticks.x = element_blank(),
@@ -489,9 +482,8 @@ ggplot() +
     plot.subtitle = element_text(size = 11),
     plot.caption = element_text(size = 8)
   ) +
-  xlim(c(112, 157)) + 
+  xlim(c(112, 157)) +
   ylim(c(-44, -11))
-
 ```
 
 Figuring out where a candidates votes come from *within* an electorate is fundamental to developing a campaign strategy. Even in small electorates (e.g. Wentworth), there are pockets of right leaning and left leaning districts. Once you factor in preference flows, this multi-variate calculus becomes important to winning or maintaining a seat.
@@ -513,20 +505,22 @@ nat_data16 <- nat_data_download(2016)
 nat_map16 <- nat_map_download(2016)
 
 # Find winner
-tpp_pp16 <- tpp_pp16 %>% 
+tpp_pp16 <- tpp_pp16 %>%
   mutate(winner = ifelse(ALP_Percent >= 50, "ALP", "LNP"))
-ggplot(data=nat_data16, aes(map_id=id)) +
-  geom_map(map=nat_map16, fill="grey90", colour="white") + 
-  geom_point(data=tpp_pp16, aes(x=Longitude, y=Latitude, colour=winner), size=1, alpha=0.3, inherit.aes=FALSE) +
-  scale_color_manual("Party", values=c("LNP"="#80b1d3", "ALP"="#fb8072")) + 
-  xlim(c(112,157)) + ylim(c(-44,-11)) +
-  theme_map() + coord_equal() + theme(legend.position="bottom")
+ggplot(data = nat_data16, aes(map_id = id)) +
+  geom_map(map = nat_map16, fill = "grey90", colour = "white") +
+  geom_point(data = tpp_pp16, aes(x = Longitude, y = Latitude, colour = winner), size = 1, alpha = 0.3, inherit.aes = FALSE) +
+  scale_color_manual("Party", values = c("LNP" = "#80b1d3", "ALP" = "#fb8072")) +
+  xlim(c(112, 157)) +
+  ylim(c(-44, -11)) +
+  theme_map() +
+  coord_equal() +
+  theme(legend.position = "bottom")
 ```
 
 The two candidate preferred vote (downloaded with `twocand_pollingbooth_download`) is a measure of preference between the two candidates who received the most votes through the division of preferences, where the winner has the higher percentage.
 
 ```{r tcp_map, fig.width=7, fig.height=5, message=FALSE, error = TRUE, warning=FALSE, echo=FALSE, tidy=TRUE}
-
 tcp_pp <- twocand_pollingbooth_download()
 tcp_pp16 <- tcp_pp %>% filter(year == 2016)
 
@@ -534,18 +528,22 @@ nat_data16 <- nat_data_download(2016)
 nat_map16 <- nat_map_download(2016)
 
 # Find winner
-tcp_pp_winners <- tcp_pp16 %>% 
-                  left_join(tcp_pp16 %>% dplyr::group_by(PollingPlace, DivisionNm) %>%                         summarise(TotalVotes = sum(OrdinaryVotes)), 
-                            by = c("PollingPlace", "DivisionNm")) %>% 
-                  filter(OrdinaryVotes/TotalVotes > 0.5)
+tcp_pp_winners <- tcp_pp16 %>%
+  left_join(tcp_pp16 %>% dplyr::group_by(PollingPlace, DivisionNm) %>% summarise(TotalVotes = sum(OrdinaryVotes)),
+    by = c("PollingPlace", "DivisionNm")
+  ) %>%
+  filter(OrdinaryVotes / TotalVotes > 0.5)
 
 # Plot
-ggplot(data=nat_data16, aes(map_id=id)) +
-  geom_map(map=nat_map16, fill="grey90", colour="white") + 
-  geom_point(data=tcp_pp_winners, aes(x=Longitude, y=Latitude, colour=PartyAb), size=1, alpha=0.6, inherit.aes=FALSE) +
-  scale_color_manual("Party", values=c("LNP"="#80b1d3", "ALP"="#fb8072", "GRN" = "#33a02c", "XEN" = "#beaed4", "ON" = "#fdc086", "KAP" = "#ffff99", "IND" = "grey25")) + 
-  xlim(c(112,157)) + ylim(c(-44,-11)) +
-  theme_map() + coord_equal() + theme(legend.position="bottom")
+ggplot(data = nat_data16, aes(map_id = id)) +
+  geom_map(map = nat_map16, fill = "grey90", colour = "white") +
+  geom_point(data = tcp_pp_winners, aes(x = Longitude, y = Latitude, colour = PartyAb), size = 1, alpha = 0.6, inherit.aes = FALSE) +
+  scale_color_manual("Party", values = c("LNP" = "#80b1d3", "ALP" = "#fb8072", "GRN" = "#33a02c", "XEN" = "#beaed4", "ON" = "#fdc086", "KAP" = "#ffff99", "IND" = "grey25")) +
+  xlim(c(112, 157)) +
+  ylim(c(-44, -11)) +
+  theme_map() +
+  coord_equal() +
+  theme(legend.position = "bottom")
 ```
 
 ## Informal votes
