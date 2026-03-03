@@ -314,9 +314,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul class="collapse">
-  <li><a href="#ons" id="toc-ons" class="nav-link active" data-scroll-target="#ons">ONS</a></li>
-  <li><a href="#nomis" id="toc-nomis" class="nav-link" data-scroll-target="#nomis">Nomis</a></li>
-  <li><a href="#trade" id="toc-trade" class="nav-link" data-scroll-target="#trade">Trade</a></li>
+  <li><a href="#packages" id="toc-packages" class="nav-link active" data-scroll-target="#packages">Packages</a></li>
+  <li><a href="#ons-regional-gdp" id="toc-ons-regional-gdp" class="nav-link" data-scroll-target="#ons-regional-gdp">ONS: Regional GDP</a></li>
+  <li><a href="#nomis-labour-market" id="toc-nomis-labour-market" class="nav-link" data-scroll-target="#nomis-labour-market">Nomis: Labour market</a></li>
+  <li><a href="#bank-of-england-base-rate" id="toc-bank-of-england-base-rate" class="nav-link" data-scroll-target="#bank-of-england-base-rate">Bank of England: Base rate</a></li>
   </ul>
 </nav>
     </div>
@@ -342,135 +343,196 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p><em>Note: Chapter under development</em></p>
-<section id="ons" class="level2">
-<h2 class="anchored" data-anchor-id="ons">ONS</h2>
-<p>The <a href="https://www.ons.gov.uk/">Office of National Statistics</a> (ONS) collates and publishes most of the UK’s economic data sets.</p>
-<p>There’s two main ways to access this data. Option 1, poorly formatted <a href="https://www.ons.gov.uk/economy/grossdomesticproductgdp/timeseries/abmi/pn2">spreadsheets</a>. Option 2, an <a href="https://developer.ons.gov.uk/">API</a> (which has been in beta for over 5 years). We’ll step through both.</p>
-<p>There’s several R packages out there that either ping the ONS’ API or web scrape the data. Kostas Vasilopoulos has produced one of the better ones (and it’s on CRAN) called <code>onsr</code>.</p>
+<p>The UK has a well-developed statistical infrastructure, and most of it is freely accessible via R. This chapter covers three complementary packages that between them cover the main sources: the Office for National Statistics, the Nomis labour market database, and the Bank of England.</p>
+<section id="packages" class="level2">
+<h2 class="anchored" data-anchor-id="packages">Packages</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(onsr)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Get a list of all datasets available</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ons_ids</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code> [1] "wellbeing-quarterly"                          
- [2] "wellbeing-local-authority"                    
- [3] "weekly-deaths-region"                         
- [4] "weekly-deaths-local-authority"                
- [5] "weekly-deaths-health-board"                   
- [6] "weekly-deaths-age-sex"                        
- [7] "uk-spending-on-cards"                         
- [8] "uk-business-by-enterprises-and-local-units"   
- [9] "traffic-camera-activity"                      
-[10] "trade"                                        
-[11] "tax-benefits-statistics"                      
-[12] "suicides-in-the-uk"                           
-[13] "sexual-orientation-by-region"                 
-[14] "sexual-orientation-by-age-and-sex"            
-[15] "retail-sales-index-large-and-small-businesses"
-[16] "retail-sales-index-all-businesses"            
-[17] "retail-sales-index"                           
-[18] "regional-gdp-by-year"                         
-[19] "regional-gdp-by-quarter"                      
-[20] "projections-older-people-sex-ratios"          
-[21] "projections-older-people-in-single-households"
-[22] "output-in-the-construction-industry"          
-[23] "online-job-advert-estimates"                  
-[24] "older-people-sex-ratios"                      
-[25] "older-people-net-internal-migration"          
-[26] "older-people-economic-activity"               
-[27] "mid-year-pop-est"                             
-[28] "life-expectancy-by-local-authority"           
-[29] "labour-market"                                
-[30] "index-private-housing-rental-prices"          
-[31] "house-prices-local-authority"                 
-[32] "health-accounts"                              
-[33] "gva-by-industry-by-local-authority"           
-[34] "generational-income"                          
-[35] "gdp-to-four-decimal-places"                   
-[36] "gdp-by-local-authority"                       
-[37] "faster-indicators-shipping-data"              
-[38] "cpih01"                                       
-[39] "childrens-wellbeing"                          
-[40] "ashe-tables-9-and-10"                         
-[41] "ashe-tables-7-and-8"                          
-[42] "ashe-tables-3"                                
-[43] "ashe-tables-27-and-28"                        
-[44] "ashe-tables-26"                               
-[45] "ashe-tables-25"                               
-[46] "ashe-tables-20"                               
-[47] "ashe-tables-11-and-12"                        
-[48] "ashe-table-5"                                 
-[49] "ageing-population-projections"                
-[50] "ageing-population-estimates"                  
-[51] "TS079"                                        
-[52] "TS078"                                        
-[53] "TS077"                                        
-[54] "TS076"                                        
-[55] "TS075"                                        
-[56] "TS074"                                        
-[57] "TS073"                                        
-[58] "TS072"                                        
-[59] "TS071"                                        
-[60] "TS070"                                        </code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(onsr)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(nomisdata)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(bbk)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ons_datasets</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>A quick map of what each package covers:</p>
+<ul>
+<li><strong><code>onsr</code></strong> — R client for the <a href="https://developer.ons.gov.uk/">ONS API</a>, giving access to national accounts, GDP, inflation, and hundreds of other official statistics</li>
+<li><strong><code>nomisdata</code></strong> — Access to <a href="https://www.nomisweb.co.uk/">Nomis</a>, the ONS service for labour market and census data broken down by geography</li>
+<li><strong><code>bbk</code></strong> — Client for the <a href="https://www.bankofengland.co.uk/boeapps/database">Bank of England’s statistical database</a>, covering interest rates, money supply, exchange rates, and more</li>
+</ul>
+<p>All three are on CRAN and require no API key for standard use.</p>
+</section>
+<section id="ons-regional-gdp" class="level2">
+<h2 class="anchored" data-anchor-id="ons-regional-gdp">ONS: Regional GDP</h2>
+<p>The ONS publishes national accounts data through its API. The <code>ons_get()</code> function takes a dataset ID and returns a tidy data frame. Use <code>ons_ids()</code> to see all available datasets.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>gdp <span class="ot">&lt;-</span> <span class="fu">ons_get</span>(<span class="at">id =</span> <span class="st">"regional-gdp-by-year"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(gdp)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 60 × 23
-   contacts     description      keywords id    last_updated links$editions$href
-   &lt;list&gt;       &lt;chr&gt;            &lt;list&gt;   &lt;chr&gt; &lt;chr&gt;        &lt;chr&gt;              
- 1 &lt;df [1 × 3]&gt; Seasonally and … &lt;chr&gt;    well… 2023-12-13T… https://api.beta.o…
- 2 &lt;df [1 × 3]&gt; Estimates of li… &lt;chr&gt;    well… 2023-12-13T… https://api.beta.o…
- 3 &lt;df [1 × 3]&gt; Provisional cou… &lt;chr&gt;    week… 2026-02-25T… https://api.beta.o…
- 4 &lt;df [1 × 3]&gt; Provisional cou… &lt;chr&gt;    week… 2024-01-09T… https://api.beta.o…
- 5 &lt;df [1 × 3]&gt; Provisional cou… &lt;chr&gt;    week… 2024-01-09T… https://api.beta.o…
- 6 &lt;df [1 × 3]&gt; Provisional cou… &lt;chr&gt;    week… 2026-02-25T… https://api.beta.o…
- 7 &lt;df [1 × 3]&gt; These data seri… &lt;NULL&gt;   uk-s… 2024-05-16T… https://api.beta.o…
- 8 &lt;df [1 × 3]&gt; The data contai… &lt;chr&gt;    uk-b… 2022-11-03T… https://api.beta.o…
- 9 &lt;df [1 × 3]&gt; Experimental da… &lt;NULL&gt;   traf… 2024-06-20T… https://api.beta.o…
-10 &lt;df [1 × 3]&gt; Country by comm… &lt;chr&gt;    trade 2026-02-19T… https://api.beta.o…
-# ℹ 50 more rows
-# ℹ 20 more variables: links$latest_version &lt;df[,2]&gt;, $self &lt;df[,1]&gt;,
-#   $taxonomy &lt;df[,1]&gt;, methodologies &lt;list&gt;, national_statistic &lt;lgl&gt;,
-#   next_release &lt;chr&gt;, qmi &lt;tibble[,1]&gt;, related_datasets &lt;list&gt;,
-#   release_frequency &lt;chr&gt;, state &lt;chr&gt;, title &lt;chr&gt;, unit_of_measure &lt;chr&gt;,
-#   type &lt;chr&gt;, publications &lt;list&gt;, license &lt;chr&gt;, is_based_on &lt;df[,2]&gt;,
-#   canonical_topic &lt;chr&gt;, subtopics &lt;list&gt;, survey &lt;chr&gt;, …</code></pre>
+<pre><code># A tibble: 6 × 12
+   v4_1 `Data Marking` `calendar-years`  Time nuts  Geography   `sic-unofficial`
+  &lt;dbl&gt; &lt;chr&gt;                     &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;       &lt;chr&gt;           
+1  -0.1 &lt;NA&gt;                       2014  2014 UKL   Wales       L               
+2  98.1 &lt;NA&gt;                       2016  2016 UKL   Wales       L               
+3  NA   .                          2019  2019 UKZ   Extra-regio L               
+4  NA   .                          2020  2020 UKZ   Extra-regio L               
+5  NA   .                          2012  2012 UKL   Wales       L               
+6  NA   .                          2012  2012 UKD   North West  L               
+# ℹ 5 more variables: UnofficialStandardIndustrialClassification &lt;chr&gt;,
+#   `type-of-prices` &lt;chr&gt;, Prices &lt;chr&gt;,
+#   `quarterly-index-and-growth-rate` &lt;chr&gt;, GrowthRate &lt;chr&gt;</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>onsgdp <span class="ot">&lt;-</span> onsr<span class="sc">::</span><span class="fu">ons_get</span>(<span class="at">id =</span> <span class="st">"gdp-to-four-decimal-places"</span>)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(onsgdp, <span class="dv">100</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 100 × 7
-    v4_0 `mmm-yy` Time   `uk-only` Geography      `sic-unofficial`
-   &lt;dbl&gt; &lt;chr&gt;    &lt;chr&gt;  &lt;chr&gt;     &lt;chr&gt;          &lt;chr&gt;           
- 1 102.  Dec-25   Dec-25 K02000001 United Kingdom K--N            
- 2  98.1 Dec-25   Dec-25 K02000001 United Kingdom R               
- 3  87.1 Dec-25   Dec-25 K02000001 United Kingdom B               
- 4 103.  Dec-25   Dec-25 K02000001 United Kingdom M               
- 5 107.  Dec-25   Dec-25 K02000001 United Kingdom N               
- 6 108.  Dec-25   Dec-25 K02000001 United Kingdom Q               
- 7 101.  Dec-25   Dec-25 K02000001 United Kingdom G-and-I         
- 8 116.  Dec-25   Dec-25 K02000001 United Kingdom T               
- 9 109.  Dec-25   Dec-25 K02000001 United Kingdom H-and-J         
-10 110.  Dec-25   Dec-25 K02000001 United Kingdom H               
-# ℹ 90 more rows
-# ℹ 1 more variable: UnofficialStandardIndustrialClassification &lt;chr&gt;</code></pre>
+</div>
+<p>The dataset is multi-dimensional — broken down by region, industry, price measure, and series type. We filter to total industry output (<code>A--T</code>) and the annual index (2019 = 100), which lets us compare how different UK regions have grown over time.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>gdp_regional <span class="ot">&lt;-</span> gdp <span class="sc">|&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="st">`</span><span class="at">sic-unofficial</span><span class="st">`</span> <span class="sc">==</span> <span class="st">"A--T"</span>,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>         GrowthRate <span class="sc">==</span> <span class="st">"Annual index"</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>         <span class="sc">!</span>Geography <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Extra-regio"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(Geography, Time)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(gdp_regional, <span class="fu">aes</span>(<span class="at">x =</span> Time, <span class="at">y =</span> v4_1, <span class="at">colour =</span> Geography)) <span class="sc">+</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">100</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">colour =</span> <span class="st">"grey60"</span>) <span class="sc">+</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotate</span>(<span class="st">"text"</span>, <span class="at">x =</span> <span class="fl">2012.1</span>, <span class="at">y =</span> <span class="fl">101.5</span>, <span class="at">label =</span> <span class="st">"2019 = 100"</span>,</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>           <span class="at">size =</span> <span class="dv">3</span>, <span class="at">colour =</span> <span class="st">"grey50"</span>, <span class="at">hjust =</span> <span class="dv">0</span>) <span class="sc">+</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">title   =</span> <span class="st">"UK regional GDP index"</span>,</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Chained volume measure, 2019 = 100"</span>,</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">x       =</span> <span class="cn">NULL</span>,</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">y       =</span> <span class="st">"Index"</span>,</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">colour  =</span> <span class="cn">NULL</span>,</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"Source: ONS via onsr"</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.position =</span> <span class="st">"right"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="18-UK-economic-data_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
 </div>
 </div>
 </section>
-<section id="nomis" class="level2">
-<h2 class="anchored" data-anchor-id="nomis">Nomis</h2>
-<p>Census data, as well as economic and social data sets that take into account location, are produced by the ONS’ <a href="https://www.nomisweb.co.uk/">Nomis</a> service. Nomis has it’s <a href="https://github.com/ropensci/nomisr">very own R package</a> called <code>nomisr</code>.</p>
-<p>The last UK census was in 2021. While there is a census slated for 2031, there is a <a href="https://www.bbc.co.uk/news/uk-51468919">growing consensus</a> that this may not be necessary, with new administrative data sets providing a more accurate picture of the UK’s population.</p>
+<section id="nomis-labour-market" class="level2">
+<h2 class="anchored" data-anchor-id="nomis-labour-market">Nomis: Labour market</h2>
+<p>Nomis is the ONS’s specialist service for labour market and census data, with results broken down to local authority and ward level. The <code>fetch_nomis()</code> function takes a dataset ID and filter parameters.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># UK unemployment by region</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>unemployment <span class="ot">&lt;-</span> <span class="fu">fetch_nomis</span>(</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">id       =</span> <span class="st">"NM_1_1"</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">time     =</span> <span class="st">"latest"</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">geography =</span> <span class="st">"TYPE480"</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">measures =</span> <span class="dv">20100</span>,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">sex      =</span> <span class="dv">7</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(unemployment)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 34
+  DATE    DATE_NAME   DATE_CODE DATE_TYPE DATE_TYPECODE DATE_SORTORDER GEOGRAPHY
+  &lt;chr&gt;   &lt;chr&gt;       &lt;chr&gt;     &lt;chr&gt;             &lt;dbl&gt;          &lt;dbl&gt;     &lt;dbl&gt;
+1 2026-01 January 20… 2026-01   date                  0              0    2.01e9
+2 2026-01 January 20… 2026-01   date                  0              0    2.01e9
+3 2026-01 January 20… 2026-01   date                  0              0    2.01e9
+4 2026-01 January 20… 2026-01   date                  0              0    2.01e9
+5 2026-01 January 20… 2026-01   date                  0              0    2.01e9
+6 2026-01 January 20… 2026-01   date                  0              0    2.01e9
+# ℹ 27 more variables: GEOGRAPHY_NAME &lt;chr&gt;, GEOGRAPHY_CODE &lt;chr&gt;,
+#   GEOGRAPHY_TYPE &lt;chr&gt;, GEOGRAPHY_TYPECODE &lt;dbl&gt;, GEOGRAPHY_SORTORDER &lt;dbl&gt;,
+#   SEX &lt;dbl&gt;, SEX_NAME &lt;chr&gt;, SEX_CODE &lt;dbl&gt;, SEX_TYPE &lt;chr&gt;,
+#   SEX_TYPECODE &lt;dbl&gt;, SEX_SORTORDER &lt;dbl&gt;, ITEM &lt;dbl&gt;, ITEM_NAME &lt;chr&gt;,
+#   ITEM_CODE &lt;dbl&gt;, ITEM_TYPE &lt;chr&gt;, ITEM_TYPECODE &lt;dbl&gt;,
+#   ITEM_SORTORDER &lt;dbl&gt;, MEASURES &lt;dbl&gt;, MEASURES_NAME &lt;chr&gt;, OBS_VALUE &lt;dbl&gt;,
+#   OBS_STATUS &lt;chr&gt;, OBS_STATUS_NAME &lt;chr&gt;, OBS_CONF &lt;lgl&gt;, …</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>unemployment <span class="sc">|&gt;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(OBS_VALUE), ITEM_NAME <span class="sc">==</span> <span class="st">"Total claimants"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(OBS_VALUE)) <span class="sc">|&gt;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(GEOGRAPHY_NAME, OBS_VALUE), <span class="at">y =</span> OBS_VALUE)) <span class="sc">+</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">"#1f77b4"</span>) <span class="sc">+</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span>comma) <span class="sc">+</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">title   =</span> <span class="st">"UK unemployment claimants by region"</span>,</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="fu">paste</span>(<span class="st">"JSA claimants —"</span>, <span class="fu">format</span>(<span class="fu">Sys.Date</span>(), <span class="st">"%B %Y"</span>)),</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">x       =</span> <span class="cn">NULL</span>,</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">y       =</span> <span class="st">"Claimant count"</span>,</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"Source: Nomis via nomisdata"</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="18-UK-economic-data_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
 </section>
-<section id="trade" class="level2">
-<h2 class="anchored" data-anchor-id="trade">Trade</h2>
-<p>In April 2025, trade is well and truly the talk of the town.</p>
-<p>UK trade data is collated by HM Revenue &amp; Customs (HMRC) and published on the website <a href="https://www.uktradeinfo.com/" class="uri">https://www.uktradeinfo.com/</a>.</p>
-<p><a href="https://github.com/pvdmeulen">Peter van der Meulen</a> has developed a wonderful R package <a href="https://github.com/pvdmeulen/uktrade"><code>uktrade</code></a> to query HMRC’s database and stitch together tables.</p>
-<p>Here’s a worked example:</p>
+<section id="bank-of-england-base-rate" class="level2">
+<h2 class="anchored" data-anchor-id="bank-of-england-base-rate">Bank of England: Base rate</h2>
+<p>The <code>bbk</code> package covers several central banks — the <code>boe_*</code> functions are specific to the Bank of England. The series ID <code>IUMABEDR</code> is the official Bank Rate.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>bank_rate <span class="ot">&lt;-</span> <span class="fu">boe_data</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">key        =</span> <span class="st">"IUMABEDR"</span>,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">start_date =</span> <span class="st">"2000-01-01"</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(bank_rate)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>         date      key  value                           description    freq
+       &lt;Date&gt;   &lt;char&gt;  &lt;num&gt;                                &lt;char&gt;  &lt;char&gt;
+1: 2000-01-31 IUMABEDR 5.6625 Monthly average of official Bank Rate monthly
+2: 2000-02-29 IUMABEDR 5.9167 Monthly average of official Bank Rate monthly
+3: 2000-03-31 IUMABEDR 6.0000 Monthly average of official Bank Rate monthly
+4: 2000-04-30 IUMABEDR 6.0000 Monthly average of official Bank Rate monthly
+5: 2000-05-31 IUMABEDR 6.0000 Monthly average of official Bank Rate monthly
+6: 2000-06-30 IUMABEDR 6.0000 Monthly average of official Bank Rate monthly
+       seasonal_adjustment          type output_in instrument_currency
+                    &lt;char&gt;        &lt;char&gt;    &lt;char&gt;              &lt;char&gt;
+1: Not seasonally adjusted Interest rate   Percent            Sterling
+2: Not seasonally adjusted Interest rate   Percent            Sterling
+3: Not seasonally adjusted Interest rate   Percent            Sterling
+4: Not seasonally adjusted Interest rate   Percent            Sterling
+5: Not seasonally adjusted Interest rate   Percent            Sterling
+6: Not seasonally adjusted Interest rate   Percent            Sterling
+          instruments
+               &lt;char&gt;
+1: Official Bank Rate
+2: Official Bank Rate
+3: Official Bank Rate
+4: Official Bank Rate
+5: Official Bank Rate
+6: Official Bank Rate</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>bank_rate <span class="sc">|&gt;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(value)) <span class="sc">|&gt;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> value)) <span class="sc">+</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">colour =</span> <span class="st">"#d62728"</span>, <span class="at">linewidth =</span> <span class="fl">0.9</span>) <span class="sc">+</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">title   =</span> <span class="st">"Bank of England official bank rate"</span>,</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"2000 to present"</span>,</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">x       =</span> <span class="cn">NULL</span>,</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">y       =</span> <span class="st">"Rate (%)"</span>,</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"Source: Bank of England via bbk"</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="18-UK-economic-data_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The post-2022 rate cycle is striking in context — rates went from near-zero (where they had sat since the 2008 financial crisis) to over 5% in the space of two years, before starting to come back down.</p>
 
 
 </section>

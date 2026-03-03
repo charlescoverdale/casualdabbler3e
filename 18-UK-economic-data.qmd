@@ -1,46 +1,123 @@
 # UK Economic Data
 
-*Note: Chapter under development*
+The UK has a well-developed statistical infrastructure, and most of it is freely accessible via R. This chapter covers three complementary packages that between them cover the main sources: the Office for National Statistics, the Nomis labour market database, and the Bank of England.
 
-## ONS
+## Packages
 
-The [Office of National Statistics](https://www.ons.gov.uk/) (ONS) collates and publishes most of the UK's economic data sets.
-
-There's two main ways to access this data. Option 1, poorly formatted [spreadsheets](https://www.ons.gov.uk/economy/grossdomesticproductgdp/timeseries/abmi/pn2). Option 2, an [API](https://developer.ons.gov.uk/) (which has been in beta for over 5 years). We'll step through both.
-
-There's several R packages out there that either ping the ONS' API or web scrape the data. Kostas Vasilopoulos has produced one of the better ones (and it's on CRAN) called `onsr`.
-
-```{r}
+```{r, warning=FALSE, message=FALSE}
+library(tidyverse)
 library(onsr)
-
-# Get a list of all datasets available
-ons_ids()
-
-ons_datasets()
-
-onsgdp <- onsr::ons_get(id = "gdp-to-four-decimal-places")
-
-head(onsgdp, 100)
+library(nomisdata)
+library(bbk)
 ```
 
-## Nomis
+A quick map of what each package covers:
 
-Census data, as well as economic and social data sets that take into account location, are produced by the ONS' [Nomis](https://www.nomisweb.co.uk/) service. Nomis has it's [very own R package](https://github.com/ropensci/nomisr) called `nomisr`.
+- **`onsr`** — R client for the [ONS API](https://developer.ons.gov.uk/), giving access to national accounts, GDP, inflation, and hundreds of other official statistics
+- **`nomisdata`** — Access to [Nomis](https://www.nomisweb.co.uk/), the ONS service for labour market and census data broken down by geography
+- **`bbk`** — Client for the [Bank of England's statistical database](https://www.bankofengland.co.uk/boeapps/database), covering interest rates, money supply, exchange rates, and more
 
-The last UK census was in 2021. While there is a census slated for 2031, there is a [growing consensus](https://www.bbc.co.uk/news/uk-51468919) that this may not be necessary, with new administrative data sets providing a more accurate picture of the UK's population.
+All three are on CRAN and require no API key for standard use.
 
-```{r}
+## ONS: Regional GDP
+
+The ONS publishes national accounts data through its API. The `ons_get()` function takes a dataset ID and returns a tidy data frame. Use `ons_ids()` to see all available datasets.
+
+```{r, warning=FALSE, message=FALSE}
+gdp <- ons_get(id = "regional-gdp-by-year")
+head(gdp)
 ```
 
-## Trade
+The dataset is multi-dimensional — broken down by region, industry, price measure, and series type. We filter to total industry output (`A--T`) and the annual index (2019 = 100), which lets us compare how different UK regions have grown over time.
 
-In April 2025, trade is well and truly the talk of the town.
+```{r, warning=FALSE, message=FALSE}
+gdp_regional <- gdp |>
+  filter(`sic-unofficial` == "A--T",
+         GrowthRate == "Annual index",
+         !Geography %in% c("Extra-regio")) |>
+  arrange(Geography, Time)
 
-UK trade data is collated by HM Revenue & Customs (HMRC) and published on the website <https://www.uktradeinfo.com/>.
-
-[Peter van der Meulen](https://github.com/pvdmeulen) has developed a wonderful R package [`uktrade`](https://github.com/pvdmeulen/uktrade) to query HMRC's database and stitch together tables.
-
-Here's a worked example:
-
-```{r}
+ggplot(gdp_regional, aes(x = Time, y = v4_1, colour = Geography)) +
+  geom_line(linewidth = 0.8) +
+  geom_hline(yintercept = 100, linetype = "dashed", colour = "grey60") +
+  annotate("text", x = 2012.1, y = 101.5, label = "2019 = 100",
+           size = 3, colour = "grey50", hjust = 0) +
+  labs(
+    title   = "UK regional GDP index",
+    subtitle = "Chained volume measure, 2019 = 100",
+    x       = NULL,
+    y       = "Index",
+    colour  = NULL,
+    caption = "Source: ONS via onsr"
+  ) +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank(),
+        legend.position = "right")
 ```
+
+## Nomis: Labour market
+
+Nomis is the ONS's specialist service for labour market and census data, with results broken down to local authority and ward level. The `fetch_nomis()` function takes a dataset ID and filter parameters.
+
+```{r, warning=FALSE, message=FALSE}
+# UK unemployment by region
+unemployment <- fetch_nomis(
+  id       = "NM_1_1",
+  time     = "latest",
+  geography = "TYPE480",
+  measures = 20100,
+  sex      = 7
+)
+
+head(unemployment)
+```
+
+```{r, warning=FALSE, message=FALSE}
+unemployment |>
+  filter(!is.na(OBS_VALUE), ITEM_NAME == "Total claimants") |>
+  arrange(desc(OBS_VALUE)) |>
+  ggplot(aes(x = reorder(GEOGRAPHY_NAME, OBS_VALUE), y = OBS_VALUE)) +
+  geom_col(fill = "#1f77b4") +
+  coord_flip() +
+  scale_y_continuous(labels = scales::comma) +
+  labs(
+    title   = "UK unemployment claimants by region",
+    subtitle = paste("JSA claimants —", format(Sys.Date(), "%B %Y")),
+    x       = NULL,
+    y       = "Claimant count",
+    caption = "Source: Nomis via nomisdata"
+  ) +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank())
+```
+
+## Bank of England: Base rate
+
+The `bbk` package covers several central banks — the `boe_*` functions are specific to the Bank of England. The series ID `IUMABEDR` is the official Bank Rate.
+
+```{r, warning=FALSE, message=FALSE}
+bank_rate <- boe_data(
+  key        = "IUMABEDR",
+  start_date = "2000-01-01"
+)
+
+head(bank_rate)
+```
+
+```{r, warning=FALSE, message=FALSE}
+bank_rate |>
+  filter(!is.na(value)) |>
+  ggplot(aes(x = date, y = value)) +
+  geom_line(colour = "#d62728", linewidth = 0.9) +
+  labs(
+    title   = "Bank of England official bank rate",
+    subtitle = "2000 to present",
+    x       = NULL,
+    y       = "Rate (%)",
+    caption = "Source: Bank of England via bbk"
+  ) +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank())
+```
+
+The post-2022 rate cycle is striking in context — rates went from near-zero (where they had sat since the 2008 financial crisis) to over 5% in the space of two years, before starting to come back down.
